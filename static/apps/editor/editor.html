@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="en"><head> <title> $$ title $$ </title>
+
+
+        <!-- NUSH 0.1 EDITOR
+        This is Free Software (GPL) -->
+
+
+
+<!-- favicon -->
+<link id="favicon" rel="icon" type="image/png" href="/static/apps/editor/saved.png">
+
+<!-- css -->
+<link href="/static/toastr/toastr.css" rel="stylesheet">
+<link href="/static/toastr/toastr-responsive.css" rel="stylesheet">
+
+<style>
+
+    body {
+        margin: 0;
+        background-color: black
+        }
+
+    #editor {
+        font-family: monospace;
+        position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+        }
+
+    .data { display: none }
+
+</style>
+
+</head><body>
+
+<!-- editor -->
+<div id=editor></div>
+
+<!-- nasty variables -->
+<span id="lang">$$ lang $$</span>
+<span id="filepath">$$ filepath $$</span>
+<span id="appdir">$$ appdir $$</span>
+
+<!-- third party js -->
+<script class=data src="/static/jquery.js"></script>
+<script class=data src="/static/toastr/toastr.js"></script>
+<script class=data src="/static/ace/ace.js"></script>
+
+<!-- nush js -->
+<script src="/static/nush.js"></script>
+<script src="/static/apps/editor/editor.js"></script>
+
+</body></html>

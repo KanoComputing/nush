@@ -1,0 +1,47 @@
+
+
+        /* NUSH 0.1 SHELL
+        This is Free Software (GPL) */
+
+
+body { margin: 0; background-color: black }
+
+a { color: #0F0 }
+a:hover, banner_button { color: #44B4CC; cursor: pointer }
+a:active, banner_button { color: #555 }
+
+.feed { border-top: 1px solid #333; word-wrap: break-word; padding: 4px }
+.padded_feed { padding: 8px 12px 4px 8px }
+.banner_button { color: #999; text-decoration: none; }
+.kill_button { cursor: pointer }
+
+.white  { color: #FFF }
+.grey   { color: #999 }
+.dull   { color: #555 }
+.red    { color: #F00 }
+.pink   { color: hotpink }
+.orange { color: #FF6600 }
+.yellow { color: #FFCC00 }
+.green  { color: #66FF00 }
+.cyan   { color: #0FF }
+.blue   { color: #88F }
+.teal   { color: #44B4CC }
+.pea    { color: #99CC99 }
+
+#editor { background: black; margin: 16px 0 4px 0}
+
+#feeds {
+    color: #EFE;
+    background: black;
+    font-size: 12px;
+    line-height: 16px;
+    font-family: monospace;
+    width: 100%;
+    }
+
+#clock {
+    color: #555;
+    font-family: monospace;
+    text-align: right;
+    padding: 12px;
+    }
