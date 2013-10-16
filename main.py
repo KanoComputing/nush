@@ -20,6 +20,8 @@ sys.path.append(ROOTDIR+'/extensions')
 
 
 class Interpreter(InteractiveInterpreter):
+    
+    '''The users interactive interpreter.'''
 
     def __init__(self):
 
