@@ -349,6 +349,9 @@ def mark(args=''):
     return shell.create_feed('green', 'mark', message)
 
 
+# COMMAND: move
+# -------------
+
 def move(args=''):
     
     tokens = args.split()
