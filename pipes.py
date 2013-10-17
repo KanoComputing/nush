@@ -48,7 +48,7 @@ class PythonStyle(Pipe):
 
     def write(self, string):
 
-        string = '<xmp>{0}</xmp>'.format(string)
+        string = '<xmp style=display:inline>{0}</xmp>'.format(string)
         self.postmaster.string += string
 
 
