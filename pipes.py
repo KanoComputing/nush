@@ -73,6 +73,10 @@ class PrettyError(Pipe):
         string = '<i class=red><xmp>{0}</xmp></i>'.format(string)
         self.postmaster.string += string
 
+class NoEscape(Pipe):
+    
+    def write(self, string): self.postmaster.string += string
+
 
 
 class Pipework(object):
@@ -81,7 +85,7 @@ class Pipework(object):
 
         while 'pin0' not in radio.channels: pass
 
-        self.pipes = (PythonStyle, PrettyPrint, PrettyError)
+        self.pipes = (PythonStyle, PrettyPrint, PrettyError, NoEscape)
         self.postmaster = PostMaster(radio)
         sys.stdout = PrettyPrint(self.postmaster)
         sys.stderr = PrettyError(self.postmaster)
