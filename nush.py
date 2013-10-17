@@ -7,6 +7,7 @@
 import os
 import cgi
 import json
+import shutil
 from time import sleep
 
 import cherrypy
@@ -346,6 +347,31 @@ def mark(args=''):
         ).format(name, path)
 
     return shell.create_feed('green', 'mark', message)
+
+
+def move(args=''):
+    
+    tokens = args.split()
+    
+    if len(tokens) != 2: return shell.create_feed(
+        'red', 'move', 'you must provide two paths: <span class=yellow>.move /from /to</span>'
+        )
+        
+    item, destination = path_resolve(tokens[0]), path_resolve(tokens[1])
+    
+    if os.path.isdir(item): kind = 'directory'
+    elif os.path.isfile(item): kind = 'file'
+    else: return shell.create_feed('red', 'move', 'there\'s nothing at <span class=yellow>{0}</span>'.format(item))
+    
+    if not os.path.isdir(destination): return shell.create_feed(
+        'red', 'move', 'there\'s no directory at <span class=yellow>{0}</span>'.format(destination)
+        )
+    
+    shutil.move(item, destination)
+    shell.create_feed(
+        'green', 'mark',
+        'moved the {0} at <span class=yellow>{1}</span> to <span class=yellow>{2}</span>'.format(kind, item, destination)
+        )
 
 
 

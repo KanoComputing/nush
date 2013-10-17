@@ -7,7 +7,7 @@
 try: shell.execute('connected(2)')
 except NameError:
 
-    from nush import goto, edit, view, mark, Shell
+    from nush import goto, edit, view, mark, move, Shell
 
     nush.shell = Shell()
 
