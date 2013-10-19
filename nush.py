@@ -93,6 +93,11 @@ class CoreBuiltIns:
 
     def load_file(self, path, timestamp): return open(path)
 
+    def radio_send(self, data):
+        
+        data = json.loads(data)
+        radio.send(data['channels'], data['message'])
+
 
 # HELPERS
 # =======

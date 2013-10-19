@@ -67,6 +67,22 @@ function supereval(pin, value, pkg) {
     superspace(update);
     }
 
+function radio_socket(channels) {
+    
+    // returns a websocket that will receive all messages on
+    // channels (a string or array of strings) 
+    if (!$.isArray(channels)) { channels = [channels] }
+    channels = channels.join('/');
+    return new WebSocket('ws://localhost:10002/ws/' + channels);
+    }
+
+function radio_send(channels, message) {
+
+    // send a message on channels (a string or array of strings)
+    if (!$.isArray(channels)) { channels = [channels] }
+    data = JSON.stringify({'channels': channels, 'message': message})
+    ajax_request('POST', '/nush/builtin/radio_send', true, data)
+    }
 
 // get a unique pin
 function issue_pin() { return ajax_request("GET", "/nush/builtin/issue_pin", false) }

@@ -61,11 +61,11 @@ $(document).keydown(function(e){
 
     // maintain a websocket connection and handle incoming packages
 
-    var websocket = new WebSocket('ws://localhost:10002/ws/pin0');
+    var socket = radio_socket('pin0');
 
-    websocket.onopen = function() { extend('shell', ['/extensions/builtin/shell.py', '/extensions/shell.py'], false) };
-    websocket.onmessage = function(e) { pkg = JSON.parse(e.data); run(pkg.jscript) };
-    websocket.onclose = function() {
+    socket.onopen = function() { extend('shell', ['/extensions/builtin/shell.py', '/extensions/shell.py'], false) };
+    socket.onmessage = function(e) { pkg = JSON.parse(e.data); run(pkg.jscript) };
+    socket.onclose = function() {
 
         connected(0);
         toastr.error('CONNECTION LOST')

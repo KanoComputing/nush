@@ -294,7 +294,6 @@ def stde(arg=''):
         'green', 'stde', 'standard error has switched to <span class=yellow>{0}</span> mode'.format(mode)
         )
 
-
 # GLOBALS
 
 shell = Shell()
