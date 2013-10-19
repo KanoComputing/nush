@@ -162,7 +162,7 @@ def mark(args=''):
         for key in nush.BOOKMARKS.keys():
 
             output += (
-                '<span class=pea>{0}</span><br><span class=yellow>&nbsp;{1}</span><br><br>'
+                '<span class=pea>{0}</span><br><span class=yellow>{1}</span><br><br>'
                 ).format(key, nush.BOOKMARKS[key])
 
         if not output: return shell.create_feed('green', 'mark', 'there are no bookmarks to list')
