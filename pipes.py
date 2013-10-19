@@ -46,6 +46,7 @@ class Pipework:
     def standard_out_mode(self, string):
 
         string = string.replace('\n', '<br>')
+        string = string.replace(' ', '&nbsp;')
         self.output += string
         
     def standard_error_mode(self, string):

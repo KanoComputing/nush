@@ -4,7 +4,6 @@
         // This is Free Software (GPL)
 
 
-
 // -------- GLOBALS ----------------
 
 var editor = ace.edit("editor"),                            // hook to the ace editor api
@@ -87,7 +86,6 @@ function connected(state) {
     favicon.href = '/static/apps/shell/'+color+'_favicon.png';
     document.getElementById('bannerhead').className = color;
     }
-
 
 
 // -------- CLOCK SETUP ----------------

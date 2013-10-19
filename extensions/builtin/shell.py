@@ -37,7 +37,7 @@ class Shell:
 
     def create_frame(self, color, title, message, path, height=16):
 
-        height = height * 16
+        height = height * 14
         height = str(height) + 'px'
         body = '<iframe src="{0}" scrolling=yes style="width: 100%; border: 1px solid #222; height: {1}"></iframe>'
         self.create_feed(color, title, message, body.format(path, height))
@@ -84,10 +84,11 @@ def view(path=''):
             message = 'rendering the image at'
             body = '<img src="{0}">'.format(path)
 
-        else:
-
-            message = 'rendering the text file at'
-            body = nush.escape_html(open(path).read())
+        else: return shell.create_frame(
+                'green', 'view', 'rendering the text file at <span class=yellow>{0}</span>'.format(path),
+                '/nush/builtin/editor?path=' + path,
+                32
+                )
 
     elif os.path.isdir(path):
 
@@ -100,6 +101,7 @@ def view(path=''):
 
     message = '{0} <span class="yellow">{1}</span>'.format(message, path)
     return shell.create_feed('green', 'view', message, body)
+
 
 # COMMAND: edit
 def edit(path=''):
@@ -147,7 +149,7 @@ def mark(args=''):
 
     def update_bookmarks_file():
 
-        with open(nush.ROOTDIR+'/static/apps/shell/bookmarks.json', 'w') as f: f.write(json.dumps(nush.BOOKMARKS))
+        with open(nush.ROOTDIR+'/static/apps/shell/bookmarks.json', 'w') as f: f.write(nush.json.dumps(nush.BOOKMARKS))
 
     tokens = args.split()
     length = len(tokens)
@@ -160,7 +162,7 @@ def mark(args=''):
         for key in nush.BOOKMARKS.keys():
 
             output += (
-                '<span class=pea>{0}</span><br><span class=yellow>{1}</span><br><br>'
+                '<span class=pea>{0}</span><br><span class=yellow>&nbsp;{1}</span><br><br>'
                 ).format(key, nush.BOOKMARKS[key])
 
         if not output: return shell.create_feed('green', 'mark', 'there are no bookmarks to list')

@@ -4,14 +4,14 @@
         This is Free Software (GPL) */
 
 
-body { margin: 0; background-color: black }
+body { margin: 0; background: black }
 
 a { color: #0F0 }
 a:hover, banner_button { color: #44B4CC; cursor: pointer }
 a:active, banner_button { color: #555 }
 
 .feed { border-top: 1px solid #333; word-wrap: break-word; padding: 4px }
-.padded_feed { padding: 8px 12px 4px 8px }
+.padded_feed { padding: 7px 11px 7px 7px }
 .banner_button { color: #999; text-decoration: none; }
 .kill_button { cursor: pointer }
 

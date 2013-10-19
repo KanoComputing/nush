@@ -200,6 +200,11 @@ def bosh(line):
     output = stdout if stdout else stderr
     return(output.decode())
 
+def read(path):
+    
+    '''Get the contents of a file from a path.'''
+    
+    return open(path_resolve(path)).read()
 
 
 # GLOBAL NAMESPACE
