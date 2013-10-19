@@ -27,12 +27,12 @@ class Interpreter(InteractiveInterpreter):
 
         self.extensions = []
 
-        nush.superspace = {'SUPERPIN': 0}
         nush.server, nush.radio, nush.interpreter = server, radio, self
 
         InteractiveInterpreter.__init__(self, {'nush': nush})
 
-        self.runcode(nush.prime_namespace)
+        self.runcode(nush.namespace)
+
 
     def enter(self, code, seen=False):
 
@@ -50,17 +50,37 @@ class Interpreter(InteractiveInterpreter):
         self.runcode(code)
         return True
 
+
     def extend(self, extension, paths, redo):
+        
+        jscript = ''
+        
+        # the shell waits for the core, everything else waits for the shell
+        while not 'core' in self.extensions: pass
+        while extension != 'shell' and 'shell' not in self.extensions: pass
+    
+        # if this extension has been done and shouldn't be redone, return
+        if extension in self.extensions and not redo: do = False
+        else: do = True
 
-        if extension in self.extensions and not redo: return
+        if do:
+            
+            # make sure it's in the list of done extensions
+            if extension not in self.extensions: self.extensions.append(extension)
 
-        if extension not in self.extensions: self.extensions.append(extension)
+            # turn the list of paths into the lines of code to be executed
+            code = '\n'.join(
+                'exec(compile(open("{0}").read(), "{0}", "exec"))'.format(ROOTDIR+path) 
+                for path in paths if os.path.isfile(ROOTDIR+path)
+                )
+            
+            self.enter(code, False)
+        
+            jscript += 'toast_extension("{0}");'.format(extension)
+        
+        if extension == 'shell': jscript += 'connected(2)' 
+        radio.send('pin0', json.dumps({'jscript': jscript}))
 
-        paths = [ ROOTDIR+path for path in paths if os.path.isfile(ROOTDIR+path) ]
-
-        self.enter('\n'.join(
-            'exec(compile(open("{0}").read(), "{0}", "exec"))'.format(path) for path in paths
-            ), False)
 
     def parse(self, code):
 
@@ -177,6 +197,7 @@ interpreter = Interpreter()
 cherrypy.config.update({
     'server.socket_host': '127.0.0.1',
     'server.socket_port': 10002,
+    'environment': 'production'
     })
 
 # plumb in ws4py's cherrypy websocket plugin

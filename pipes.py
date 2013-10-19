@@ -12,84 +12,62 @@ from time import sleep
 from threading import Thread
 
 
-
-class PostMaster(object):
-
-    '''Handles a string buffer, pushing stdout and stderr to Chrome.'''
+class Pipework:
 
     def __init__(self, radio):
 
-        self.string = ''
-        flusher = Thread(target=self.flush, args=(radio, ))
-        flusher.daemon = True
-        flusher.start()
+        def flush():
+    
+            while True:
+    
+                sleep(0.005)
+                if not self.output: continue
+                output, self.output = self.output, ''
+                radio.send('pin0', json.dumps({'jscript': 'output(pkg.string)', 'string': output}))
 
-    def flush(self, radio):
+        self.output = ''
+        
+        while 'pin0' not in radio.channels: pass
+        
+        sys.stdout.write = self.standard_out_mode
+        sys.stderr.write = self.standard_error_mode
+        
+        thread = Thread(target=flush)
+        thread.daemon = True
+        thread.start()
 
-        while True:
-
-            sleep(0.005)
-            if not self.string: continue
-            string, self.string = self.string, ''
-            radio.send('pin0', json.dumps({'jscript': 'output(pkg.string)', 'string': string}))
-
-
-
-class Pipe(object):
-
-    '''Base class for all pipes.'''
-
-    def __init__(self, postmaster): self.postmaster = postmaster
-
-
-class PythonStyle(Pipe):
-
-    '''Escapes output so it looks like it would in a terminal.'''
-
-    def write(self, string):
-
-        string = '<xmp style=display:inline>{0}</xmp>'.format(string)
-        self.postmaster.string += string
-
-
-class PrettyPrint(Pipe):
-
-    '''Preserves newlines in output, but otherwise prints HTML.'''
-
-    def write(self, string):
+    def expand_mode(self, mode):
+        
+        if not mode: return 'standard'
+        if mode in ('h', 'html'): return 'html'
+        if mode in ('t', 'term', 'terminal'): return 'terminal'
+        return False
+        
+    def standard_out_mode(self, string):
 
         string = string.replace('\n', '<br>')
-        self.postmaster.string += string
+        self.output += string
+        
+    def standard_error_mode(self, string):
 
-
-class PrettyError(Pipe):
-
-    '''Escapes output so it looks like it would in a terminal, but
-    italicised and coloured red.
-    '''
-
-    def write(self, string):
-
-        string = '<i class=red><xmp>{0}</xmp></i>'.format(string)
-        self.postmaster.string += string
-
-class NoEscape(Pipe):
+        string = '<xmp style=display:inline class=pea>{0}</xmp>'.format(string)
+        self.output += string
     
-    def write(self, string): self.postmaster.string += string
+    def terminal_mode(self, string):
+
+        string = '<xmp style=display:inline>{0}</xmp>'.format(string)
+        self.output += string
+
+    def html_mode(self, string): self.output += string
+
+    def stdout(self, mode):
+        
+        if mode == 'standard': sys.stdout.write = self.standard_out_mode
+        else: sys.stdout.write = getattr(self, mode + '_mode')
+
+    def stderr(self, mode):
+        
+        if mode == 'standard': sys.stderr.write = self.standard_error_mode
+        else: sys.stderr.write = getattr(self, mode + '_mode')
 
 
-
-class Pipework(object):
-
-    def __init__(self, radio):
-
-        while 'pin0' not in radio.channels: pass
-
-        self.pipes = (PythonStyle, PrettyPrint, PrettyError, NoEscape)
-        self.postmaster = PostMaster(radio)
-        sys.stdout = PrettyPrint(self.postmaster)
-        sys.stderr = PrettyError(self.postmaster)
-
-    def stdout_mode(self, mode): sys.stdout = self.pipes[mode](self.postmaster)
-
-    def stderr_mode(self, mode): sys.stderr = self.pipes[mode](self.postmaster)

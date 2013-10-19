@@ -64,11 +64,12 @@ $(document).keydown(function(e){
 
     var websocket = new WebSocket('ws://localhost:10002/ws/pin0');
 
-    websocket.onopen = function() { extend('shell', ['/extensions/builtin/shell.py', '/extensions/shell.py'], true) };
+    websocket.onopen = function() { extend('shell', ['/extensions/builtin/shell.py', '/extensions/shell.py'], false) };
     websocket.onmessage = function(e) { pkg = JSON.parse(e.data); run(pkg.jscript) };
     websocket.onclose = function() {
 
         connected(0);
+        toastr.error('CONNECTION LOST')
         setTimeout(connect, 1400);
 
         };}();
@@ -79,9 +80,9 @@ function connected(state) {
     // updates the banner and favicon whenever the connection state changes
 
     var color;
-    if (state === 0) { color = 'red'; toastr.error('CONNECTION LOST') }
-    else if (state == 1) { color = 'orange'; toast_extension('shell') }
-    else { color = 'green'; toast_droidspace_ready() }
+    if (state === 0) { color = 'red' }
+    else if (state == 1) { color = 'orange' }
+    else { color = 'green' }
 
     favicon.href = '/static/apps/shell/'+color+'_favicon.png';
     document.getElementById('bannerhead').className = color;
@@ -163,7 +164,6 @@ function clear_feeds() { feeds.innerHTML = null; stdout = null }
 // -------- HANDY WRAPPERS ----------------
 
 function toast_extension(extension) { toastr.success('NAMESPACE EXTENDED: ' + extension) }
-function toast_droidspace_ready() { toastr.success('NAMESPACE READY') }
 function license() { enter('shell.license()', false) }
 function fail_save() { toastr.error('FAIL: You can\'t save the shell.') }
 
