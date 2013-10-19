@@ -85,7 +85,7 @@ def view(path=''):
             body = '<img src="{0}">'.format(path)
 
         else: return shell.create_frame(
-                'green', 'view', 'rendering the text file at <span class=yellow>{0}</span>'.format(path),
+                'green', 'view', 'rendering the text file at <hi>{0}</hi>'.format(path),
                 '/nush/builtin/editor?path=' + path,
                 32
                 )
@@ -96,10 +96,10 @@ def view(path=''):
         body = nush.dir2html(path)
 
     else: return shell.create_feed(
-        'red', 'view', 'there\'s nothing at <span class="yellow">{0}</span>'.format(path)
+        'red', 'view', 'there\'s nothing at <hi>{0}</hi>'.format(path)
         )
 
-    message = '{0} <span class="yellow">{1}</span>'.format(message, path)
+    message = '{0} <hi>{1}</hi>'.format(message, path)
     return shell.create_feed('green', 'view', message, body)
 
 
@@ -123,20 +123,20 @@ def edit(path=''):
         path = path_resolve(tokens[1])
 
         if os.path.isfile(path): return shell.create_feed(
-                'red', 'edit', 'there\'s already a file at <span class=yellow>{0}</span>'.format(path)
+                'red', 'edit', 'there\'s already a file at <hi>{0}</hi>'.format(path)
                 )
 
         try:
             with open(path, 'w') as f: f.write('')
         except IOError: return shell.create_feed(
-            'red', 'edit', 'there\'s no path to <span class="yellow">{0}</span>'.format(path)
+            'red', 'edit', 'there\'s no path to <hi>{0}</hi>'.format(path)
             )
 
     else:
 
         path = path_resolve(path)
         if not os.path.isfile(path): return shell.create_feed(
-                'red', 'edit', 'there\'s no file at <span class="yellow">{0}</span>'.format(path)
+                'red', 'edit', 'there\'s no file at <hi>{0}</hi>'.format(path)
                 )
 
     return shell.execute("window.open('/nush/builtin/editor?path={0}')".format(path))
@@ -162,7 +162,7 @@ def mark(args=''):
         for key in nush.BOOKMARKS.keys():
 
             output += (
-                '<span class=pea>{0}</span><br><span class=yellow>{1}</span><br><br>'
+                '<span class=pea>{0}</span><br><hi>{1}</hi><br><br>'
                 ).format(key, nush.BOOKMARKS[key])
 
         if not output: return shell.create_feed('green', 'mark', 'there are no bookmarks to list')
@@ -183,22 +183,22 @@ def mark(args=''):
             del nush.BOOKMARKS[name]
             update_bookmarks_file()
             return shell.create_feed(
-                'green', 'mark', 'deleted the bookmark <span class="yellow">{0}</span>'.format(name)
+                'green', 'mark', 'deleted the bookmark <hi>{0}</hi>'.format(name)
                 )
 
         except KeyError: return shell.create_feed(
-            'red', 'mark', 'there\'s no bookmark named <span class="yellow">{0}</span>'.format(name)
+            'red', 'mark', 'there\'s no bookmark named <hi>{0}</hi>'.format(name)
             )
 
     # or create a new bookmark...
 
-    if length == 1: name, path = tokens[0], get_cwd()       # bookmark the current working directory
+    if length == 1: name, path = tokens[0], os.getcwd()       # bookmark the current working directory
     else: name, path = tokens[1], path_resolve(tokens[0])   # bookmark the given path
 
     nush.BOOKMARKS[name] = path
     update_bookmarks_file()
     message = (
-        'a bookmark named <span class="yellow">{0}</span> now points to <span class="yellow">{1}</span>'
+        'a bookmark named <hi>{0}</hi> now points to <hi>{1}</hi>'
         ).format(name, path)
 
     return shell.create_feed('green', 'mark', message)
@@ -212,7 +212,7 @@ def goto(path=''):
     if not path:
 
         os.chdir(nush.HOME)
-        message = 'the working directory is now <span class="yellow">{0}</span>'.format(nush.HOME)
+        message = 'the working directory is now <hi>{0}</hi>'.format(nush.HOME)
         return shell.create_feed('green', 'goto', message)
 
     path = path_resolve(path)
@@ -220,11 +220,11 @@ def goto(path=''):
     try: os.chdir(path)
     except OSError:
 
-        message = 'there\'s no directory at <span class="yellow">{0}</span>'.format(path)
+        message = 'there\'s no directory at <hi>{0}</hi>'.format(path)
         return shell.create_feed('red', 'goto', message)
 
     body = nush.dir2html(path)
-    message = 'the working directory is now <span class="yellow">{0}</span><br><br>'.format(path)
+    message = 'the working directory is now <hi>{0}</hi><br><br>'.format(path)
     return shell.create_feed('green', 'goto', message, body)
 
 
@@ -234,17 +234,17 @@ def move(args=''):
     tokens = args.split()
     
     if len(tokens) != 2: return shell.create_feed(
-        'red', 'move', 'you must provide two paths: <span class=yellow>.move /from /to</span>'
+        'red', 'move', 'you must provide two paths: <hi>.move /from /to</hi>'
         )
         
     item, destination = path_resolve(tokens[0]), path_resolve(tokens[1])
     
     if os.path.isdir(item): kind = 'directory'
     elif os.path.isfile(item): kind = 'file'
-    else: return shell.create_feed('red', 'move', 'there\'s nothing at <span class=yellow>{0}</span>'.format(item))
+    else: return shell.create_feed('red', 'move', 'there\'s nothing at <hi>{0}</hi>'.format(item))
     
     if not os.path.isdir(destination): return shell.create_feed(
-        'red', 'move', 'there\'s no directory at <span class=yellow>{0}</span>'.format(destination)
+        'red', 'move', 'there\'s no directory at <hi>{0}</hi>'.format(destination)
         )
     
     nupath = destination + '/' + os.path.basename(item)
@@ -253,17 +253,17 @@ def move(args=''):
         nukind = 'directory' if os.path.isdir(nupath) else 'file'
         
         return shell.create_feed(
-            'red', 'move', 'a {0} already lives at <span class=yellow>{1}</span>'.format(nukind, nupath)
+            'red', 'move', 'a {0} already lives at <hi>{1}</hi>'.format(nukind, nupath)
             )
     
     nush.shutil.move(item, destination)
     shell.create_feed(
         'green', 'mark',
-        'moved the {0} at <span class=yellow>{1}</span> to <span class=yellow>{2}</span>'.format(kind, item, destination)
+        'moved the {0} at <hi>{1}</hi> to <hi>{2}</hi>'.format(kind, item, destination)
         )
     
     shell.create_feed(
-        'red', 'stdo', 'there\'s no mode named <span class=yellow>{0}</span>'.format(mode)
+        'red', 'stdo', 'there\'s no mode named <hi>{0}</hi>'.format(mode)
         )
 
 # COMMAND: stdo
@@ -272,12 +272,12 @@ def stdo(arg=''):
     mode = nush.pipe.expand_mode(arg)
     
     if not mode: return shell.create_feed(
-        'red', 'stdo', 'there\'s no mode named <span class=yellow>{0}</span>'.format(arg)
+        'red', 'stdo', 'there\'s no mode named <hi>{0}</hi>'.format(arg)
         )
         
     nush.pipe.stdout(mode)
     shell.create_feed(
-        'green', 'stdo', 'standard out has switched to <span class=yellow>{0}</span> mode'.format(mode)
+        'green', 'stdo', 'standard out has switched to <hi>{0}</hi> mode'.format(mode)
         )
 
 # COMMAND: stde
@@ -286,12 +286,12 @@ def stde(arg=''):
     mode = nush.pipe.expand_mode(arg)
         
     if not mode: return shell.create_feed(
-        'red', 'stde', 'there\'s no mode named <span class=yellow>{0}</span>'.format(arg)
+        'red', 'stde', 'there\'s no mode named <hi>{0}</hi>'.format(arg)
         )
         
     nush.pipe.stderr(mode)
     shell.create_feed(
-        'green', 'stde', 'standard error has switched to <span class=yellow>{0}</span> mode'.format(mode)
+        'green', 'stde', 'standard error has switched to <hi>{0}</hi> mode'.format(mode)
         )
 
 # GLOBALS

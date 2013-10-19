@@ -92,9 +92,9 @@ function connected(state) {
 
 !function check_time(mins) {
 
-    // recursively checks the time, using the get_time method from nush.js
-    // this is done every 0.5 seconds until the current minute changes,
-    // then it waits 59 seconds before starting again
+    // recursively checks the time every 0.5 seconds until the current minute
+    // changes, then it updates the clock using get_time from nush.js, then it
+    // waits 59 seconds before starting again
 
     var nu_mins = new Date().getMinutes();
 
