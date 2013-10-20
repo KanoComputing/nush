@@ -139,12 +139,10 @@ function append_to_feed(feed, string) {
 
 function output(string) {
 
-    // handle any output from droidspace
+    // handle any output from the user's interpreter
 
     if (stdout === null) {
-        var stdout_feed = '';
-        stdout_feed += '<span class="green">nush</span> <span class=grey>#</span> ';
-        stdout_feed += 'interpreter';
+        var stdout_feed = '<good>nush</good> <lite>#</lite> interpreter';
         create_feed(stdout_feed, 'stdout');
         stdout = document.getElementById('stdout');
         }

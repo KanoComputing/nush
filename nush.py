@@ -180,20 +180,20 @@ def dir2html(path):
         ends = item.endswith
         full_path = '{0}/{1}'.format(path, item)
 
-        if os.path.isdir(full_path):                                                                        # directories
+        if os.path.isdir(full_path):
 
-            dirs += '''<span class="orange">{0}</span><br>'''.format(item)
+            dirs += '''<directory>{0}</directory><br>'''.format(item)
             continue
 
-        elif item.startswith('README') or item.startswith('LICENSE'): color = 'white'                       # specials
-        elif ends('.py') or ends('.rb') or ends('.bsh') or ends('.lua'): color = 'yellow'                   # executables
-        elif ends('.html') or ends('.md') or ends('.css') or ends('.js') or ends('.json'): color = 'cyan'   # web stuff
-        elif ends('.png') or ends('.jpg') or ends('.jpeg') or ends('.mp4'): color = 'green'                 # media files
-        elif ends('.zip'): color = 'pea'                                                                    # regular archives
-        elif ends('.apk'): color = 'pink'                                                                   # android packages
-        else: color = 'grey'                                                                                # everything else
+        elif ends('.py'): tag = 'python_file'
+        elif ends('.zip'): tag = 'archive_file'
+        elif item.startswith('.'): tag = 'hidden_file'
+        elif item.startswith('README') or item.startswith('LICENSE'): tag = 'readme_file'
+        elif ends('.png') or ends('.jpg') or ends('.jpeg') or ends('.mp4'): tag = 'media_file'
+        elif ends('.html') or ends('.md') or ends('.css') or ends('.js') or ends('.json'): tag = 'web_file'
+        else: tag = 'file'
 
-        files += '''<span class="{0}">{1}</span><br>'''.format(color, item)
+        files += '''<{0}>{1}</{0}><br>'''.format(tag, item)
 
     return dirs + files if dirs or files else '<span class=dull>(this directory is empty)</span>'
 

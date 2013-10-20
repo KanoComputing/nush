@@ -10,26 +10,23 @@ a { color: #0F0 }
 a:hover, banner_button { color: #44B4CC; cursor: pointer }
 a:active, banner_button { color: #555 }
 
-
 .feed { border-top: 1px solid #333; word-wrap: break-word; padding: 4px }
 .padded_feed { padding: 7px 11px 7px 7px }
 .banner_button { color: #999; text-decoration: none; }
 .kill_button { cursor: pointer }
 
-/* these classes are all being replaced with semantic elements...
-*/
-.white          { color: #FFF }
-.grey           { color: #999 }
-.dull           { color: #555 }
-.red,       bad { color: #F00 }         /* negative meassages */
-.pink,     pink { color: hotpink }      /* stuff that's pink */
-.orange         { color: #FF6600 }
-.yellow,     hi { color: #FFCC00 }      /* highlighted text */
-.green,    good { color: #66FF00 }      /* positive messages */
-.cyan           { color: #0FF }
-.blue           { color: #88F }
-.teal           { color: #44B4CC }
-.pea,       meh { color: #99CC99 }      /* non-critical errors and warnings */
+.white  { color: #FFF }
+.grey   { color: #999 }
+.dull   { color: #555 }
+.red    { color: #F00 }
+.pink   { color: hotpink }
+.orange { color: #FF6600 }
+.yellow { color: #FFCC00 }
+.green  { color: #66FF00 }
+.cyan   { color: #0FF }
+.blue   { color: #88F }
+.teal   { color: #44B4CC }
+.pea    { color: #99CC99 }
 
 #editor { background: black; margin: 16px 0 4px 0}
 
@@ -48,3 +45,27 @@ a:active, banner_button { color: #555 }
     text-align: right;
     padding: 12px;
     }
+
+    
+    /* new semantish elements */
+
+/* inline emphasis */
+yell { color: #FF6600; font-style: italic; font-weight: bold }  /* stuff that's really important */
+hi   { color: #FFCC00 }                                         /* highlighted text */
+norm { color: #FFFFFF }                                         /* normal stuff */
+lite { color: #999999 }                                         /* lighter stuff */
+dull { color: #555555 }                                         /* stuff that's dull, like legalities and .pyc files  */
+cute { color: hotpink }                                         /* stuff that's cute */
+good { color: #66FF00 }                                         /* positive messages */
+bad  { color: #FF0000 }                                         /* negative meassages and critcal errors */
+meh  { color: #44B4CC }                                         /* non-critical errors and warnings */
+
+/* file elements */
+file         { color: #999999 }
+directory    { color: #FF6600 } 
+python_file  { color: #FFCC00 }
+readme_file  { color: #FFFFFF }
+archive_file { color: #FF0000 }
+web_file     { color: #66FF00 }
+media_file   { color: #44B4CC }
+hidden_file  { color: #555555 }

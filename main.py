@@ -42,7 +42,7 @@ class Interpreter(InteractiveInterpreter):
 
         if seen:
 
-            output = '<span class="grey">{0}</span>'.format(escape_html(code))
+            output = '<lite>{0}</lite>'.format(escape_html(code))
             radio.send('pin0', json.dumps(
                 {'jscript': 'output(pkg.string)', 'string': output}
                 ))

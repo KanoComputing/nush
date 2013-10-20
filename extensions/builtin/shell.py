@@ -258,12 +258,8 @@ def move(args=''):
     
     nush.shutil.move(item, destination)
     shell.create_feed(
-        'green', 'mark',
+        'green', 'move',
         'moved the {0} at <hi>{1}</hi> to <hi>{2}</hi>'.format(kind, item, destination)
-        )
-    
-    shell.create_feed(
-        'red', 'stdo', 'there\'s no mode named <hi>{0}</hi>'.format(mode)
         )
 
 # COMMAND: stdo
