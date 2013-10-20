@@ -51,7 +51,7 @@ class Pipework:
         
     def standard_error_mode(self, string):
 
-        string = '<xmp style=display:inline class=pea>{0}</xmp>'.format(string)
+        string = '<meh><xmp style=display:inline>{0}</xmp></meh>'.format(string)
         self.output += string
     
     def terminal_mode(self, string):

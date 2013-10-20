@@ -16,18 +16,20 @@ a:active, banner_button { color: #555 }
 .banner_button { color: #999; text-decoration: none; }
 .kill_button { cursor: pointer }
 
-.white      { color: #FFF }
-.grey       { color: #999 }
-.dull       { color: #555 }
-.red        { color: #F00 }
-.pink       { color: hotpink }
-.orange     { color: #FF6600 }
-.yellow, hi { color: #FFCC00 }
-.green      { color: #66FF00 }
-.cyan       { color: #0FF }
-.blue       { color: #88F }
-.teal       { color: #44B4CC }
-.pea        { color: #99CC99 }
+/* these classes are all being replaced with semantic elements...
+*/
+.white          { color: #FFF }
+.grey           { color: #999 }
+.dull           { color: #555 }
+.red,       bad { color: #F00 }         /* negative meassages */
+.pink,     pink { color: hotpink }      /* stuff that's pink */
+.orange         { color: #FF6600 }
+.yellow,     hi { color: #FFCC00 }      /* highlighted text */
+.green,    good { color: #66FF00 }      /* positive messages */
+.cyan           { color: #0FF }
+.blue           { color: #88F }
+.teal           { color: #44B4CC }
+.pea,       meh { color: #99CC99 }      /* non-critical errors and warnings */
 
 #editor { background: black; margin: 16px 0 4px 0}
 
