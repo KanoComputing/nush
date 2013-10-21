@@ -7,8 +7,8 @@ irresponsable magic to tightly integrate Chrome.
 If that doesn't sound like fun, you probably won't like it.
 
 
-**NOTE:** *While the software generally works, and can be used as documented, the API is not
-stable. It is released as a prototype for interested parties to hack on.*
+**NOTE:** *While the software generally works, and can be used as documented, the API is not stable.*
+*It is released as a prototype for interested parties to hack on.*
 ----------------------------------------------------------------------------------------------
 
 Nush is currently unpackaged, so you'll need to clone the repo and run `python3 nush/main.py`.
