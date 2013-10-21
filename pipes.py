@@ -12,7 +12,7 @@ from time import sleep
 from threading import Thread
 
 
-class Pipework:
+class Pipes:
 
     def __init__(self, radio):
 

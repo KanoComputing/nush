@@ -10,6 +10,18 @@ a { color: #0F0 }
 a:hover, banner_button { color: #44B4CC; cursor: pointer }
 a:active, banner_button { color: #555 }
 
+input {
+    color: white;
+    font-size: 12px;
+    font-family: monospace;
+    border: none;
+    margin: 0 auto;
+    background: black;
+    }
+input:focus { outline: 0 }
+
+::-webkit-scrollbar { display: none }
+
 .feed { border-top: 1px solid #333; word-wrap: break-word; padding: 4px }
 .padded_feed { padding: 7px 11px 7px 7px }
 .banner_button { color: #999; text-decoration: none; }
@@ -59,6 +71,8 @@ cute { color: hotpink }                                         /* stuff that's 
 good { color: #66FF00 }                                         /* positive messages */
 bad  { color: #FF0000 }                                         /* negative meassages and critcal errors */
 meh  { color: #44B4CC }                                         /* non-critical errors and warnings */
+
+was-good { color: #00AA00 }
 
 /* file elements */
 file         { color: #999999 }

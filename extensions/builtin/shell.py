@@ -224,7 +224,7 @@ def goto(path=''):
         return shell.create_feed('red', 'goto', message)
 
     body = nush.dir2html(path)
-    message = 'the working directory is now <hi>{0}</hi><br><br>'.format(path)
+    message = 'the working directory is now <hi>{0}</hi>'.format(path)
     return shell.create_feed('green', 'goto', message, body)
 
 
@@ -290,12 +290,43 @@ def stde(arg=''):
         'green', 'stde', 'standard error has switched to <hi>{0}</hi> mode'.format(mode)
         )
 
+# BUILTIN: input
+def input(prompt='', callback=None):
+    
+    pin = issue_pin()
+    form = '<form id={0} onsubmit="return false" style=display:inline>'.format(pin)
+    prompt = '<good>{0}</good>'.format(prompt)
+    condition = '"if (event.keyCode==13 && this.value) { submit_stdin(this.parentNode, this.value) }"'
+
+    nush.pipe.output += form + prompt + '<input onkeyup=' + condition + ' type=text autofocus autocomplete=off></form>'
+    
+    if not callback:
+        
+        while pin not in superspace: pass
+        return superspace.pop(pin)
+    
+    def handle(pin, callback):
+        
+        while pin not in superspace: pass
+        callback(superspace.pop(pin))
+    
+    nush.Thread(target=handle, args=(pin, callback)).start()
+
+class StdIn:
+    
+    def isatty(self): return False
+    
+    def readline(self): return input()
+    
+import sys
+sys.stdin = StdIn()
+del sys
+
 # GLOBALS
 
 shell = Shell()
-input = shell.prompt
 nush.shell = shell
-nush.pipe = nush.pipes.Pipework(nush.radio)
+nush.pipe = nush.pipes.Pipes(nush.radio)
 shell.execute('connected(1)')
 del Shell
 

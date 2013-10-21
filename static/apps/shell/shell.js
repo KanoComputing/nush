@@ -46,13 +46,8 @@ editor.on('change', function () {
     clock.scrollIntoView();
     });
 
-$(document).keydown(function(e){
-
-    // focus the editor whenever the dot key is pressed (outside the editor)
-
-    if (e.keyCode == 190 && !editor.isFocused()) { editor.focus(); return false }
-    });
-
+// focus the editor whenever the escape key is pressed (outside the editor)
+$(document).keydown(function(e){ if (e.keyCode == 27) { editor.focus(); return false } });
 
 
 // -------- WEBSOCKET SETUP ----------------
@@ -115,7 +110,7 @@ function connected(state) {
 
 function create_feed(feed, id) {
 
-    // append a new feed element to the feeds
+    // append a new feed to the feeds
 
     var child = document.createElement('div');
     child.className = 'feed';
@@ -128,7 +123,7 @@ function create_feed(feed, id) {
 
 function append_to_feed(feed, string) {
 
-    // append a new output element to a feed
+    // append some output to a feed
 
     var child = document.createElement('span');
     child.innerHTML = string;
@@ -152,9 +147,21 @@ function output(string) {
     }
 
 
+function submit_stdin(element, content) {
+    
+    var update = {};
+    update[element.id] = content;
+    superspace(update);
+    
+    $(element).replaceWith(
+        '<lite><was-good>' + element.innerText + '</was-good> <xmp style=display:inline>' + content + '</xmp><xmp></xmp></lite>'
+        );
+    
+    editor.focus();
+    }
+
 // clear all feeds from the screen
 function clear_feeds() { feeds.innerHTML = null; stdout = null }
-
 
 
 // -------- HANDY WRAPPERS ----------------
