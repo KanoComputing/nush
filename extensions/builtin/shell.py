@@ -293,12 +293,14 @@ def stde(arg=''):
 # BUILTIN: input
 def input(prompt='', callback=None):
     
+    if prompt: prompt = '<xmp style=display:inline>{0}</xmp>'.format(prompt)
+    
     pin = issue_pin()
     form = '<form id={0} onsubmit="return false" style=display:inline>'.format(pin)
     prompt = '<good>{0}</good>'.format(prompt)
     condition = '"if (event.keyCode==13 && this.value) { submit_stdin(this.parentNode, this.value) }"'
 
-    nush.pipe.output += form + prompt + '<input onkeyup=' + condition + ' type=text autofocus autocomplete=off></form>'
+    nush.pipe.output += form + prompt + '<input onkeyup=' + condition + ' type=text size=80 autofocus autocomplete=off></form>'
     
     if not callback:
         

@@ -154,11 +154,8 @@ function submit_stdin(element, content) {
     superspace(update);
     
     $(element).replaceWith(
-        '<lite><was-good>' + element.innerText + '</was-good> <xmp style=display:inline>' + content + '</xmp><xmp></xmp></lite>'
-        );
-    
-    editor.focus();
-    }
+        '<lite><was-good>' + element.innerText + '</was-good><xmp style=display:inline>' + content + '</xmp><xmp></xmp></lite>'
+        );}
 
 // clear all feeds from the screen
 function clear_feeds() { feeds.innerHTML = null; stdout = null }

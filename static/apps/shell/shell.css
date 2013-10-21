@@ -14,8 +14,8 @@ input {
     color: white;
     font-size: 12px;
     font-family: monospace;
+    position: relative; left: 0px;
     border: none;
-    margin: 0 auto;
     background: black;
     }
 input:focus { outline: 0 }
