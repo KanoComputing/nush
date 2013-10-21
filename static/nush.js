@@ -1,6 +1,6 @@
 
 
-        // NUSH 0.1 MAIN JS LIBRARY
+        // NUSH 0.2 MAIN JS LIBRARY
         // This is Free Software (GPL)
 
 var run = eval; // because ace will complain about eval

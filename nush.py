@@ -1,6 +1,6 @@
 
 
-        # NUSH 0.1 CORE NAMESPACE
+        # NUSH 0.2 CORE NAMESPACE
         # This is Free Software (GPL)
 
 

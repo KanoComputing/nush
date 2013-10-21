@@ -1,6 +1,6 @@
 
 
-        # NUSH 0.1 MAIN SERVER
+        # NUSH 0.2 MAIN SERVER
         # This is Free Software (GPL)
 
 

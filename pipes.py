@@ -1,6 +1,6 @@
 
 
-        # NUSH 0.1 PIPES AND BUFFER
+        # NUSH 0.2 PIPES AND BUFFER
         # This is Free Software (GPL)
 
 

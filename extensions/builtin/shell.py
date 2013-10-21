@@ -1,6 +1,6 @@
 
 
-        # NUSH 0.1 SHELL EXTENSION
+        # NUSH 0.2 SHELL EXTENSION
         # This is Free Software (GPL)
 
 class Shell:
