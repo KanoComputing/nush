@@ -59,13 +59,13 @@ class Interpreter(InteractiveInterpreter):
         while not 'core' in self.extensions: pass
         while extension != 'shell' and 'shell' not in self.extensions: pass
     
-        # if this extension has been done and shouldn't be redone, return
+        # if this extension has been done and shouldn't be redone...
         if extension in self.extensions and not redo: do = False
         else: do = True
 
         if do:
             
-            # make sure it's in the list of done extensions
+            # make sure the extension in the list of done extensions
             if extension not in self.extensions: self.extensions.append(extension)
 
             # turn the list of paths into the lines of code to be executed
@@ -86,7 +86,7 @@ class Interpreter(InteractiveInterpreter):
 
         code = code.strip()
 
-        # if it's just python, we're done
+        # if it's just python, there's nothing to do
         if not code.startswith('.'): return code, True
 
         # split the input into tokens
@@ -98,8 +98,9 @@ class Interpreter(InteractiveInterpreter):
         # get the whole arg string (args are parsed by the callable)
         arg = code[len(tokens[0])+2:].strip()
 
-        ## quote the arg as cleanly a possible, returning bad news if it
-        ## can't be wrapped in quotes without adding escape characters...
+        ## quote the arg as cleanly as possible, returning bad news if it
+        ## can't be wrapped in quotes without adding escape characters
+        ## note: this string is executed and rendered in the shell
 
         def either_end(char): return arg.startswith(char) or arg.endswith(char)
 
@@ -161,12 +162,6 @@ class Server:
 
     @cherrypy.expose # serve the shell
     def index(self): return open(ROOTDIR+'/static/apps/shell/shell.html')
-
-    @cherrypy.expose # create a new interpreter
-    def interpreter(self):
-
-        global interpreter
-        interpreter = Droidspace()
 
     @cherrypy.expose # expose the interpreter's enter method
     def enter(self):
