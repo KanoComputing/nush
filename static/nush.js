@@ -104,14 +104,8 @@ function get_time() {
     if (hours > 12) { hours -= 12; time = 'pm' }
     else { time = 'am' }
 
-    day = ['Sun', 'Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat'][day];
-
-    if (date in [1, 21, 31])  {date += 'st'}
-    if (date in [2, 22])      {date += 'nd'}
-    if (date in [3, 23])      {date += 'rd'}
-    else                      {date += 'th'}
-
-    month = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month];
+    day   = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day];
+    month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month];
 
     return hours+':'+mins+time+' '+day+' '+date+' '+month;
     }
