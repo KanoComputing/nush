@@ -197,7 +197,7 @@ interpreter = Interpreter()
 cherrypy.config.update({
     'server.socket_host': '127.0.0.1',
     'server.socket_port': 10002,
-    'environment': 'production'
+    'environment': 'embedded'
     })
 
 # plumb in ws4py's cherrypy websocket plugin

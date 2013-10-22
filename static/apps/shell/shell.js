@@ -1,6 +1,6 @@
 
 
-        // NUSH 0.2 CORE NAMESPACE
+        // NUSH 0.2 SHELL
         // This is Free Software (GPL)
 
 

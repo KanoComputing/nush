@@ -4,7 +4,7 @@
         This is Free Software (GPL) */
 
 
-body { margin: 0; background: black }
+body { margin: 0; background-image: url('/static/bg.png'); }
 
 a { color: #0F0 }
 a:hover, banner_button { color: #44B4CC; cursor: pointer }
@@ -22,7 +22,7 @@ input:focus { outline: 0 }
 
 ::-webkit-scrollbar { display: none }
 
-.feed { border-top: 1px solid #333; word-wrap: break-word; padding: 4px }
+.feed { border-top: 1px solid #222; word-wrap: break-word; padding: 4px }
 .padded_feed { padding: 7px 11px 7px 7px }
 .banner_button { color: #999; text-decoration: none; }
 .kill_button { cursor: pointer }
@@ -40,11 +40,10 @@ input:focus { outline: 0 }
 .teal   { color: #44B4CC }
 .pea    { color: #99CC99 }
 
-#editor { background: black; margin: 16px 0 4px 0}
+#editor { background: transparent; margin: 16px 0 4px 0}
 
 #feeds {
     color: #EFE;
-    background: black;
     font-size: 12px;
     line-height: 16px;
     font-family: monospace;
