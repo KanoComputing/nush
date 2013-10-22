@@ -34,15 +34,22 @@ editor.setShowPrintMargin(false);
 editor.setBehavioursEnabled(false);
 editor.setDisplayIndentGuides(false);
 editor.renderer.setShowGutter(false);
-editor.focus()
+editor.focus();
 
 editor.on('change', function () {
 
+    var content = editor.getValue();
+    
+    // set the context depending on the content
+    if (content.indexOf('.') === 0) { editor.getSession().setMode(null) }
+    else { editor.getSession().setMode('ace/mode/python') }
+    
     // resize the editor whenever its content changes
-
-    var nu_lines = editor.getValue().split('\n').length;
-    if (nu_lines !== lines) { ed.style.height = (16 * nu_lines) + 'px'; lines = nu_lines }
-    editor.resize();
+    var nu_lines = content.split('\n').length;
+    if (nu_lines !== lines) {
+        ed.style.height = (16 * nu_lines) + 'px'; lines = nu_lines; editor.resize();
+        }
+    
     clock.scrollIntoView();
     });
 
@@ -63,7 +70,7 @@ $(document).keydown(function(e){ if (e.keyCode == 27) { editor.focus(); return f
     socket.onclose = function() {
 
         connected(0);
-        toastr.error('CONNECTION LOST')
+        toastr.error('CONNECTION LOST');
         setTimeout(connect, 1400);
 
         };}();
