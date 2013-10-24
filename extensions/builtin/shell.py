@@ -18,7 +18,14 @@ class Shell:
         if extras: package.update(extras)
         self.send(nush.json.dumps(package))
 
-        while pin not in superspace: pass
+        nush.stdin_lock.acquire()
+
+        while True:
+        
+            if pin in superspace: break
+            nush.stdin_lock.wait()
+        
+        nush.stdin_lock.release()
         return superspace.pop(pin)
 
     def execute(self, jscript, extras=None):
@@ -290,39 +297,49 @@ def stde(arg=''):
         'green', 'stde', 'standard error has switched to <hi>{0}</hi> mode'.format(mode)
         )
 
+
+nush.stdin_lock = nush.Condition()
+
 # BUILTIN: input
-def input(prompt='', callback=None):
+def input(prompt=''):
+
+    # create and render stdin prompt...
     
-    if prompt: prompt = '<xmp style=display:inline>{0}</xmp>'.format(prompt)
+    if prompt: prompt = '<good><xmp style=display:inline>{0}</xmp></good>'.format(prompt)
     
     pin = issue_pin()
-    form = '<form id={0} onsubmit="return false" style=display:inline>'.format(pin)
-    prompt = '<good>{0}</good>'.format(prompt)
-    condition = '"if (event.keyCode==13 && this.value) { submit_stdin(this.parentNode, this.value) }"'
-
-    nush.pipe.output += form + prompt + '<input onkeyup=' + condition + ' type=text size=80 autofocus autocomplete=off></form>'
     
-    if not callback:
-        
-        while pin not in superspace: pass
-        return superspace.pop(pin)
+    nush.pipe.output += '''
+    <form id=%s onsubmit="return false" style=display:inline>%s<input
+    onkeyup="if (event.keyCode==13 && this.value) { submit_stdin(this.parentNode, this.value) }"
+    type=text size=128 autofocus autocomplete=off></form>
+    ''' % (pin, prompt)
     
-    def handle(pin, callback):
-        
-        while pin not in superspace: pass
-        callback(superspace.pop(pin))
+    shell.execute('''
+        $("%s").on("remove", function () { submit_stdin(document.getElementById("%s").parentNode, "") })
+        ''' % (pin, pin)
+        )
     
-    nush.Thread(target=handle, args=(pin, callback)).start()
+    # and now we wait...
+    
+    nush.stdin_lock.acquire()
+            
+    while True:
+    
+        if pin in superspace: break
+        nush.stdin_lock.wait()
+    
+    nush.stdin_lock.release()
+    
+    return superspace.pop(pin)
 
 class StdIn:
     
     def isatty(self): return False
-    
     def readline(self): return input()
     
-import sys
-sys.stdin = StdIn()
-del sys
+import sys; sys.stdin = StdIn(); del sys, StdIn
+
 
 # GLOBALS
 

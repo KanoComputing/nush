@@ -9,7 +9,7 @@ import cgi
 import json
 import shutil
 from time import sleep
-from threading import Thread
+from threading import Thread, Condition
 
 import cherrypy
 import pipes
@@ -61,7 +61,11 @@ class CoreBuiltIns:
 
     def superspace(self, data=None):
 
+        stdin_lock.acquire()
         if data: superspace.update(json.loads(data))
+        stdin_lock.notifyAll()
+        stdin_lock.release()
+        
         return json.dumps(superspace)
 
     def editor(self, path):

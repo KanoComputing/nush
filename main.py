@@ -38,7 +38,7 @@ class Interpreter(InteractiveInterpreter):
 
         code, valid = self.parse(code)
 
-        if not valid: return False
+        if not valid: return radio.send('pin0', feed('red', 'line', 'the arguments were invalid'))
 
         if seen:
 
@@ -48,7 +48,6 @@ class Interpreter(InteractiveInterpreter):
                 ))
 
         self.runcode(code)
-        return True
 
 
     def extend(self, extension, paths, redo):
@@ -167,8 +166,7 @@ class Server:
     def enter(self):
 
         data = json.loads(cherrypy.request.body.read().decode())
-        valid = interpreter.enter(data['code'], data['seen'])
-        if not valid: radio.send('pin0', feed('red', 'line', 'the arguments were invalid'))
+        interpreter.enter(data['code'], data['seen'])
 
     @cherrypy.expose # expose the interpreter's extend method
     def extend(self, extension, redo):

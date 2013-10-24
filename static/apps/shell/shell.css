@@ -4,27 +4,44 @@
         This is Free Software (GPL) */
 
 
-body { margin: 0; background-image: url('/static/bg.png'); }
+body {
+    margin: 0;
+    background-image: url('/static/bg.png');
+    }
 
 a { color: #0F0 }
-a:hover, banner_button { color: #44B4CC; cursor: pointer }
+
 a:active, banner_button { color: #555 }
+
+a:hover, banner_button {
+    color: #44B4CC;
+    cursor: pointer;
+    }
 
 input {
     color: white;
     font-size: 12px;
     font-family: monospace;
-    position: relative; left: 0px;
     border: none;
-    background: black;
+    background: transparent;
     }
+
 input:focus { outline: 0 }
 
 ::-webkit-scrollbar { display: none }
 
-.feed { border-top: 1px solid #222; word-wrap: break-word; padding: 4px }
+.feed {
+    border-top: 1px solid #222;
+    word-wrap: break-word;
+    padding: 4px; }
+
 .padded_feed { padding: 7px 11px 7px 7px }
-.banner_button { color: #999; text-decoration: none; }
+
+.banner_button {
+    color: #999;
+    text-decoration: none;
+    }
+
 .kill_button { cursor: pointer }
 
 .white  { color: #FFF }
@@ -40,7 +57,9 @@ input:focus { outline: 0 }
 .teal   { color: #44B4CC }
 .pea    { color: #99CC99 }
 
-#editor { background: transparent; margin: 16px 0 4px 0}
+#editor {
+    background: transparent;
+    margin: 8px 0 4px 0}
 
 #feeds {
     color: #EFE;
@@ -56,24 +75,21 @@ input:focus { outline: 0 }
     text-align: right;
     padding: 12px;
     }
-
     
-    /* new semantish elements */
+/* new semantish elements */
 
-/* inline emphasis */
-yell { color: #FF6600; font-style: italic; font-weight: bold }  /* stuff that's really important */
-hi   { color: #FFCC00 }                                         /* highlighted text */
-norm { color: #FFFFFF }                                         /* normal stuff */
-lite { color: #999999 }                                         /* lighter stuff */
-dull { color: #555555 }                                         /* stuff that's dull, like legalities and .pyc files  */
-cute { color: hotpink }                                         /* stuff that's cute */
-good { color: #66FF00 }                                         /* positive messages */
-bad  { color: #FF0000 }                                         /* negative meassages and critcal errors */
-meh  { color: #44B4CC }                                         /* non-critical errors and warnings */
+hi   { color: #FFCC00 }
+norm { color: #FFFFFF }
+lite { color: #999999 }
+dull { color: #555555 }
+cute { color: hotpink }
+good { color: #66FF00 }
+bad  { color: #FF0000 }
+meh  { color: #44B4CC }
+yell { color: #FF6600; font-style: italic; font-weight: bold }
 
 was-good { color: #00AA00 }
 
-/* file elements */
 file         { color: #999999 }
 directory    { color: #FF6600 } 
 python_file  { color: #FFCC00 }

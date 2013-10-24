@@ -57,6 +57,7 @@ editor.on('change', function () {
 $(document).keydown(function(e){ if (e.keyCode == 27) { editor.focus(); return false } });
 
 
+
 // -------- WEBSOCKET SETUP ----------------
 
 !function connect() {
@@ -90,6 +91,7 @@ function connected(state) {
     }
 
 
+
 // -------- CLOCK SETUP ----------------
 
 !function check_time(mins) {
@@ -112,8 +114,11 @@ function connected(state) {
     }(new Date().getMinutes());
 
 
+clock.innerText = get_time();
 
-// -------- MANAGE DROIDSPACE OUTPUT ----------------
+
+
+// -------- MANAGE IO ----------------
 
 function create_feed(feed, id) {
 
@@ -154,18 +159,46 @@ function output(string) {
     }
 
 
+function clear_feeds() {
+    
+    // clear all feeds from the screen
+    clear_stdins();    
+    feeds.innerHTML = null;
+    stdout = null;
+    }
+
+
 function submit_stdin(element, content) {
     
+    // send the input for a given stdin prompt and replace with a ghosty
     var update = {};
     update[element.id] = content;
     superspace(update);
     
     $(element).replaceWith(
-        '<lite><was-good>' + element.innerText + '</was-good><xmp style=display:inline>' + content + '</xmp><xmp></xmp></lite>'
-        );}
+        '<lite><was-good><xmp style=display:inline>'
+        + element.innerText + '</xmp></was-good><xmp style=display:inline>'
+        + content + '</xmp></lite><br>'
+        );
+    
+    editor.focus();
+    }
 
-// clear all feeds from the screen
-function clear_feeds() { feeds.innerHTML = null; stdout = null }
+
+function clear_stdins() {
+    
+    // return empty strings for all stdin prompts
+    $('form').each( function () {
+        
+        update ={};
+        update[this.id] = '';
+        superspace(update);
+        });}
+
+
+// clean up stdin prompts before leaving the page
+window.onbeforeunload = function() { clear_stdins() };
+
 
 
 // -------- HANDY WRAPPERS ----------------
@@ -246,9 +279,4 @@ editor.commands.addCommand({
         editor.resize();
         clock.scrollIntoView();
         }});
-
-
-
-// -------- ONLOAD ----------------
-
-clock.innerText = get_time();
+    
