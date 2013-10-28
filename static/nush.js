@@ -1,7 +1,8 @@
 
 
-        // NUSH 0.2 MAIN JS LIBRARY
+        // NUSH 0.3 MAIN JS LIBRARY
         // This is Free Software (GPL)
+
 
 var run = eval; // because ace will complain about eval
 var time;
@@ -68,9 +69,9 @@ function supereval(pin, value, pkg) {
     }
 
 function radio_socket(channels) {
-    
+
     // returns a websocket that will receive all messages on
-    // channels (a string or array of strings) 
+    // channels (a string or array of strings)
     if (!$.isArray(channels)) { channels = [channels] }
     channels = channels.join('/');
     return new WebSocket('ws://localhost:10002/ws/' + channels);

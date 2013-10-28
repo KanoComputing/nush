@@ -3,7 +3,7 @@
     <title>nush</title>
 
 
-        <!-- NUSH 0.2.6 ~ This is Free Software (GPL) -->
+        <!-- NUSH 0.3.0 ~ This is Free Software (GPL) -->
         
         <!--
         
@@ -41,10 +41,10 @@
 </head><body>
 
 <!-- banner -->
-<div style="font-family: monospace; font-size: 12px; line-height: 16px; padding: 4px 12px 4px 4px">
+<div style="font-family: monospace; font-size: 12px; line-height: 16px; padding: 4px 4px 4px 4px">
 
     <!-- bannerhead -->
-    <span id="bannerhead" class="dull">NUSH</span> <span class="grey">0.2.6</span>
+    <span id="bannerhead" class="dull">NUSH</span> <span class="grey">0.3.0</span>
 
     <!-- banner links -->
     <span style="float: right">
@@ -68,8 +68,9 @@
 
 <div id="editor"></div>
 
-<div id="clock"></div>
+<div id=footer onclick=editor.focus()><span id="prompt_count">&nbsp;</span><span id="clock"></span></div>
 
+<div id=completer></div>
 
 <!-- third party js -->
 <script src="/static/jquery_ui/jquery-1.9.1.js"></script>

@@ -1,11 +1,12 @@
 
 
-        /* NUSH 0.2 SHELL
+        /* NUSH 0.3 SHELL
         This is Free Software (GPL) */
 
 
 body {
     margin: 0;
+    font-size: 12px;
     background-image: url('/static/bg.png');
     }
 
@@ -20,10 +21,10 @@ a:hover, banner_button {
 
 input {
     color: white;
-    font-size: 12px;
     font-family: monospace;
     border: none;
     background: transparent;
+    margin: 0;
     }
 
 input:focus { outline: 0 }
@@ -31,6 +32,7 @@ input:focus { outline: 0 }
 ::-webkit-scrollbar { display: none }
 
 .feed {
+    font-family: monospace; /*explicit: chrome occasionally forgets to do monospace??*/
     border-top: 1px solid #222;
     word-wrap: break-word;
     padding: 4px; }
@@ -55,7 +57,7 @@ input:focus { outline: 0 }
 .cyan   { color: #0FF }
 .blue   { color: #88F }
 .teal   { color: #44B4CC }
-.pea    { color: #99CC99 }
+.pea    { color: #88DD88 }
 
 #editor {
     background: transparent;
@@ -69,16 +71,42 @@ input:focus { outline: 0 }
     width: 100%;
     }
 
-#clock {
+#footer {
     color: #555;
     font-family: monospace;
-    text-align: right;
-    padding: 12px;
+    padding: 12px 4px 28px 4px;
     }
-    
-/* new semantish elements */
+
+#clock { float: right }
+
+#completer {
+    display: none;
+    font-family: monospace;
+    position: fixed;
+    overflow-y: auto;
+    z-index: 1000;
+    }
+
+/*  semantish elements experiment
+    -----------------------------
+    the hi element is documented. the rest are
+    internal and can [probably will] be changed.
+    */
 
 hi   { color: #FFCC00 }
+
+completion {
+    color: #44B4CC;
+    background: #111;
+    cursor: pointer;
+    display: block;
+    padding-right: 16px;
+    position: relative;
+    left: 0; right:0;
+    }
+completion:hover { color: hotpink }
+completion:nth-child(odd) { background: #151515 }
+
 norm { color: #FFFFFF }
 lite { color: #999999 }
 dull { color: #555555 }
@@ -87,8 +115,6 @@ good { color: #66FF00 }
 bad  { color: #FF0000 }
 meh  { color: #44B4CC }
 yell { color: #FF6600; font-style: italic; font-weight: bold }
-
-was-good { color: #00AA00 }
 
 file         { color: #999999 }
 directory    { color: #FF6600 } 

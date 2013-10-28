@@ -1,6 +1,6 @@
 
 
-        // NUSH 0.2 EDITOR
+        // NUSH 0.3 EDITOR
         // This is Free Software (GPL)
 
 

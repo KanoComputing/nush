@@ -1,23 +1,25 @@
 
 
-        // NUSH 0.2 SHELL
+        // NUSH 0.3 SHELL
         // This is Free Software (GPL)
 
 
 // -------- GLOBALS ----------------
 
-var editor = ace.edit("editor"),                            // hook to the ace editor api
-    ed = document.getElementById('editor'),                 // the chalkboard editor element
-    favicon = document.getElementById('favicon'),           // the favicon element
-    feeds = document.getElementById('feeds'),               // the output feeds element
-    clock = document.getElementById('clock'),               // the entire main screen element
-    lines = 1,                                              // tracks editor lines at last count
-    line_history = [],                                      // the user's command line input history
-    stdout = null,                                          // tracks the existance of droidspace feed
-    pointer = 0,                                            // tracks place in history during scrolling
-    cwd,                                                    // tracks the current working directory
-    run = eval;                                             // stops ace from complaining that eval is evil
-
+var editor = ace.edit('editor'),                        // hook to the ace editor api
+    ed = document.getElementById('editor'),             // the chalkboard editor element
+    favicon = document.getElementById('favicon'),       // the favicon element
+    feeds = document.getElementById('feeds'),           // the output feeds element
+    clock = document.getElementById('clock'),           // the entire main screen element
+    completer = document.getElementById('completer'),   // the completion dialog widget
+    completing = false,                                 // tracks if the completer is visible
+    lines = 1,                                          // tracks editor lines at last count
+    line_history = [],                                  // the user's command line input history
+    stdout = null,                                      // tracks the existance of droidspace feed
+    pointer = 0,                                        // tracks place in history during scrolling
+    prompt_count,                                       // tracks the number of pending stdin prompts
+    cwd,                                                // tracks the current working directory
+    run = eval;                                         // stops ace from complaining that eval is evil
 
 
 // -------- EDITOR SETUP ----------------
@@ -41,7 +43,7 @@ editor.on('change', function () {
     var content = editor.getValue();
     
     // set the context depending on the content
-    if (content.indexOf('.') === 0) { editor.getSession().setMode(null) }
+    if (content.indexOf('.') === 0) { editor.getSession().setMode(null); hide_completer() }
     else { editor.getSession().setMode('ace/mode/python') }
     
     // resize the editor whenever its content changes
@@ -51,11 +53,14 @@ editor.on('change', function () {
         }
     
     clock.scrollIntoView();
+    
+    if (completing) { setTimeout(complete, 30) }
     });
 
-// focus the editor whenever the escape key is pressed (outside the editor)
-$(document).keydown(function(e){ if (e.keyCode == 27) { editor.focus(); return false } });
-
+editor.getSelection().on('changeCursor', function() {
+    
+    if (completing) { setTimeout(complete, 30) }
+    })
 
 
 // -------- WEBSOCKET SETUP ----------------
@@ -156,67 +161,154 @@ function output(string) {
 
     feeds.appendChild(stdout);
     append_to_feed(stdout, string);
+    update_prompts();
     }
 
 
 function clear_feeds() {
     
-    // clear all feeds from the screen
-    clear_stdins();    
+    // clear all feeds from the screen (so it looks like new)
+    
+    var cleared = clear_stdins();
     feeds.innerHTML = null;
     stdout = null;
-    }
+    update_prompts();
+    if (cleared) {
+        var singular = ' prompt';
+        if (cleared > 1) { singular += 's' }
+        output('<br><br><meh>> Pending Prompts Destroyed (the string "quit" was returned for '+cleared+singular+').</meh><br>');
+        }}
 
 
 function submit_stdin(element, content) {
     
     // send the input for a given stdin prompt and replace with a ghosty
+   
     var update = {};
     update[element.id] = content;
     superspace(update);
     
     $(element).replaceWith(
-        '<lite><was-good><xmp style=display:inline>'
-        + element.innerText + '</xmp></was-good><xmp style=display:inline>'
+        '<lite><span class=pea><xmp style=display:inline>'
+        + element.innerText + '</xmp></span><xmp style=display:inline>'
         + content + '</xmp></lite><br>'
         );
     
     editor.focus();
+    update_prompts();
     }
 
 
 function clear_stdins() {
     
-    // return empty strings for all stdin prompts
+    // return 'quit' as input to any stdin prompts destroyed
+    
+    var cleared = 0;
+    
     $('form').each( function () {
-        
-        update ={};
-        update[this.id] = '';
-        superspace(update);
-        });}
 
+        update ={};
+        update[this.id] = 'quit';
+        superspace(update);
+        cleared++;
+        });
+    
+    return cleared;
+    }
+
+function update_prompts() {
+    
+    // update the prompt counter, removing it if there are no prompts 
+    
+    if ($('.stdin_prompt').length) {
+        $('#prompt_count').html(
+            '<lite>* pending prompts </lite><span class=pea>' + $('.stdin_prompt').length + '</span>');
+            }
+    else { $('#prompt_count').html('&nbsp;') }
+    
+    clock.scrollIntoView();
+    }
 
 // clean up stdin prompts before leaving the page
 window.onbeforeunload = function() { clear_stdins() };
 
 
+// -------- COMPLETION STUFF ----------------
 
-// -------- HANDY WRAPPERS ----------------
+function complete(){
+    
+    // opens the completer (if not already open), then does one
+    // completion (each time this is called)
+    
+    var completions = get_completions();
+    if (!completions) { return false }
+    completing = true;
+    
+    var place = $('.ace_cursor')[0].getBoundingClientRect();
+    var style = {
+        display: 'block',
+        top: place.top + 16,
+        left: place.left,
+        bottom: 4
+        };
+        
+    $(completer).css(style).html(JSON.parse(completions));
+    }
+
+
+function get_completions() {
+    
+    // get and return completions for the slate
+    
+    var cursor = editor.getCursorPosition();
+    var content = editor.getValue();
+    
+    var data = JSON.stringify({
+        'line': cursor.row + 1, 'index': cursor.column, 'content': content
+        });
+
+    return ajax_request('POST', '/nush/builtin/complete', false, data);
+    }
+
+
+function hide_completer() {
+    
+    // hide the completer from view
+    
+    completer.style.display = 'none';
+    completing = false;
+    }
+
+
+window.onscroll = function() {
+    
+    // if the completer is visible it should follow the cursor
+    
+    if (!completing) { return false }
+    
+    var place = $('.ace_cursor')[0].getBoundingClientRect();
+    var style = {
+        top: place.top + 16,
+        left: place.left,
+        bottom: 4
+        };
+
+    $(completer).css(style);
+    };
+
+
+// TODO // .print <img src=http://imgs.xkcd.com/comics/python.png style=padding:12px>
+
 
 function toast_extension(extension) { toastr.success('NAMESPACE EXTENDED: ' + extension) }
 function license() { enter('shell.license()', false) }
-function fail_save() { toastr.error('FAIL: You can\'t save the shell.') }
-
 
 
 // -------- KEYBINDINGS ----------------
 
-// Meta + S: save content
-editor.commands.addCommand({
-
-    name: 'fail_save',
-    bindKey: {win: 'Ctrl-s',  mac: 'Cmd-s'},
-    exec: function(editor) { fail_save(); }
+// Ctrl + Dot (outside editor): highlight editor
+$(window).bind('keydown', function(event) {
+    if ( (event.ctrlKey || event.metaKey) && event.which == 190 && editor.isFocused() === false ) { editor.focus() }
     });
 
 // Enter: execute the content if it's a command, else create a new line
@@ -224,6 +316,7 @@ editor.commands.addCommand({
 
     name: 'handle_enter',
     bindKey: {win: 'Enter',  mac: 'Enter'},
+    passEvent: true,
     exec: function(editor) {
 
         var content = editor.getValue();
@@ -231,6 +324,17 @@ editor.commands.addCommand({
         if (content === '.') { editor.setValue(''); clear_feeds() }
         else if (content.indexOf('.') === 0) { enter(content); editor.setValue('') }
         else { editor.insert('\n') }
+        }});
+
+// Meta + Dot: do completion
+editor.commands.addCommand({
+
+    name: 'complete',
+    bindKey: {win: 'Ctrl-.',  mac: 'Cmd-.'},
+    exec: function(editor) {
+        
+        if (completing) { completer.style.display = 'none'; completing = false }
+        else { completing = true; complete() }
         }});
 
 // Meta + Enter: execute the content, no matter what
