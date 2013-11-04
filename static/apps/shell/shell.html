@@ -3,7 +3,7 @@
     <title>nush</title>
 
 
-        <!-- NUSH 0.3.0 ~ This is Free Software (GPL) -->
+        <!-- NUSH 0.3.1 ~ This is Free Software (GPL) -->
         
         <!--
         
@@ -41,13 +41,13 @@
 </head><body>
 
 <!-- banner -->
-<div style="font-family: monospace; font-size: 12px; line-height: 16px; padding: 4px 4px 4px 4px">
+<div style="font-family: monospace; font-size: 12px; line-height: 16px; padding: 4px; border-bottom: 1px solid black;">
 
     <!-- bannerhead -->
-    <span id="bannerhead" class="dull">NUSH</span> <span class="grey">0.3.0</span>
+    <span id="bannerhead" class="dull">NUSH</span> <span class="grey">0.3.1</span>
 
     <!-- banner links -->
-    <span style="float: right">
+    <span style="float: right;">
 
         <a href="https://github.com/carlsmith/nush/wiki" target="_blank"
             class="banner_button hint--left hint--bounce" data-hint="Project Wiki">wiki</a>
@@ -66,9 +66,12 @@
 
 <div id="feeds"></div>
 
+<div id=spacer></div>
+
 <div id="editor"></div>
 
 <div id=footer onclick=editor.focus()><span id="prompt_count">&nbsp;</span><span id="clock"></span></div>
+<div id=jedi_mode onclick=editor.focus()><dull>&nbsp;<dull></div>
 
 <div id=completer></div>
 

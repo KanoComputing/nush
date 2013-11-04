@@ -1,8 +1,5 @@
 
-
-        /* NUSH 0.3 SHELL
-        This is Free Software (GPL) */
-
+        /* NUSH: SHELL STYLES */
 
 body {
     margin: 0;
@@ -31,13 +28,33 @@ input:focus { outline: 0 }
 
 ::-webkit-scrollbar { display: none }
 
+video, iframe {
+    border: 1px solid #292929;
+    border-top: 1px solid #3A3A3A;
+    }
+
+video, img { box-shadow: 0 8px 32px -4px black }
+
+iframe {
+    width: 100%;
+    box-shadow: 0 8px 16px -4px black;
+    }
+
+.stdout {
+    margin-bottom: 16px;
+    display: block;
+    }
+
+.stdout xmp { padding-top: 4px }
+
 .feed {
-    font-family: monospace; /*explicit: chrome occasionally forgets to do monospace??*/
-    border-top: 1px solid #222;
+    font-family: monospace;
+    border-top: 1px solid #292929;
+    border-bottom: 1px solid black;
     word-wrap: break-word;
     padding: 4px; }
 
-.padded_feed { padding: 7px 11px 7px 7px }
+.padded_feed { padding: 16px 7px 16px 7px}
 
 .banner_button {
     color: #999;
@@ -59,9 +76,12 @@ input:focus { outline: 0 }
 .teal   { color: #44B4CC }
 .pea    { color: #88DD88 }
 
-#editor {
-    background: transparent;
-    margin: 8px 0 4px 0}
+#spacer {
+    padding: 8px;
+    border-top: 1px solid #292929;
+    }
+
+#editor { background: transparent }
 
 #feeds {
     color: #EFE;
@@ -74,18 +94,10 @@ input:focus { outline: 0 }
 #footer {
     color: #555;
     font-family: monospace;
-    padding: 12px 4px 28px 4px;
+    padding: 16px 4px 0 4px;
     }
 
 #clock { float: right }
-
-#completer {
-    display: none;
-    font-family: monospace;
-    position: fixed;
-    overflow-y: auto;
-    z-index: 1000;
-    }
 
 /*  semantish elements experiment
     -----------------------------
@@ -94,19 +106,6 @@ input:focus { outline: 0 }
     */
 
 hi   { color: #FFCC00 }
-
-completion {
-    color: #44B4CC;
-    background: #111;
-    cursor: pointer;
-    display: block;
-    padding-right: 16px;
-    position: relative;
-    left: 0; right:0;
-    }
-completion:hover { color: hotpink }
-completion:nth-child(odd) { background: #151515 }
-
 norm { color: #FFFFFF }
 lite { color: #999999 }
 dull { color: #555555 }
@@ -114,7 +113,7 @@ cute { color: hotpink }
 good { color: #66FF00 }
 bad  { color: #FF0000 }
 meh  { color: #44B4CC }
-yell { color: #FF6600; font-style: italic; font-weight: bold }
+yell { color: #FF6600 }
 
 file         { color: #999999 }
 directory    { color: #FF6600 } 

@@ -1,8 +1,5 @@
 
-
-        # NUSH 0.3 MAIN SERVER
-        # This is Free Software (GPL)
-
+        # NUSH: MAIN SCRIPT
 
 # standard library stuff
 import os, sys, json
@@ -25,17 +22,18 @@ sys.path.append(ROOTDIR+'/extensions')
 
 
 class Interpreter(InteractiveInterpreter):
-    
+
     '''This is the user's interactive interpreter. The user has no access
     to stuff outside this space unless a reference is passed in for them.
-    
+
     Absolutely everything must, directly or indirectly, end up inside this
     namespace somewhere. Reference to runtime objects must be passed in to
     make them available to the user, including this interpreter.
-    
+
     Anything messy or dangerous will stay inside the nush module.'''
 
     extensions = [] # the extensions that have been loaded, by name
+    line_history = [] # the shell input history
 
     def __init__(self):
 
@@ -43,174 +41,180 @@ class Interpreter(InteractiveInterpreter):
         all to the nush module object, making the server, radio and this
         interpreter new globals in that namespace. The nush module is
         then passed into the new interpreter.
-        
+
         Some startup code is then executed. This code initialises some stuff
         in the nush module that references the server and radio, now they're
         available. It then imports some stuff from the nush module into the
         interpreter's namespace, so they're globals to the user.
         '''
-        
+
         nush.server, nush.radio, nush.interpreter = server, radio, self
-        
+
         InteractiveInterpreter.__init__(self, {'nush': nush})
-        
+
         self.runcode(nush.namespace)
 
 
-    def enter(self, code, seen=False):
-        
-        '''This method takes a string of code, calls self.parse on it, which
-        trys to convert it to pure Python. If that fails, an error message is
-        sent to the shell, else the code is executed inside the interpreter.
-        
+    def enter(self, string, seen=False):
+
+        '''This method takes a string of code. If it's a command, it's parsed
+        and the callable gets called, otherwise the input string is executed
+        in the interpreter.
+
         The seen argument determines if the input is echoed in the shell. It
         is possible for clients to enter code silently, so it doesn't appear
         to be user input.'''
-
-        code, valid = self.parse(code)
-
-        if not valid:
-            
-            return radio.send('pin0', feed('red', 'line', 'the arguments were invalid'))
+        
+        string = string.strip()
 
         if seen:
 
-            output = '<lite>{0}</lite>'.format(escape_html(code))
-            radio.send('pin0', json.dumps(
-                {'jscript': 'output(pkg.string)', 'string': output}
-                ))
+            output = '<lite><xmp>{0}</xmp></lite>'.format(string)
+            radio.send('pin0', json.dumps({
+                'jscript': 'output(pkg.string)',
+                'string': '<lite><xmp>{0}</xmp></lite>'.format(string)
+                    }))
 
-        self.runcode(code)
+            self.line_history = [
+                line for line in self.line_history if line != string
+                ]
+
+            self.line_history.append(string)
+
+        if string.startswith('.'):
+
+            call = string[1:].split()[0] # everything before the first space
+            args = string[len(call)+2:]  # everything after the first space
+            func = nush.find(call)       # a reference to the callable object  
+            
+            if args: func(args)
+            else: func()
+
+        else: self.runcode(string)
 
 
     def extend(self, extension, paths, redo):
-        
+
         '''An extension is just a named collection of files to be executed.
-        
+
         Note: The files are not imported; they are just executed inside the
         namespace, allowing the interpreter to be extended easily.
-        
+
         This method accepts an extension name, a list of file paths and a redo
         bool. If redo is truthy, the extension will be loaded even if it has
         been loaded already, otherwise not.
-        
+
         An extension typically consists of one file that actually extends
         the namespace, and another, of the same name, but living in the
         extensions directory, that the end user can hack on. Any file
         that doesn't exist is simply ignored.
-        
+
         No extension can load until the core extension is loaded, which is
         done when nush.namespace is entered at the end of self.__init__ .
+        
         No other extension, apart from the core, can load until the shell's
         extension has loaded, so further extensions can depend on the shell
         existing and the namespace being ready to manage it.
         '''
-        
+
         jscript = '' # shell output, if any is needed
-        
+
         # the shell waits for the core, everything else waits for the shell
         while not 'core' in self.extensions: pass
         while extension != 'shell' and 'shell' not in self.extensions: pass
-    
+
         # if this extension has been done, and shouldn't be redone, the
         # following block (which loads the extension) is skipped over
         if not (extension in self.extensions and not redo):
-            
+
             # make sure the extension's in the list of done extensions
             if extension not in self.extensions: self.extensions.append(extension)
 
             # turn the list of paths, for files that exist, into a string of exec calls
             code = '\n'.join(
-                'exec(compile(open("{0}").read(), "{0}", "exec"))'.format(ROOTDIR+path) 
+                'exec(compile(open("{0}").read(), "{0}", "exec"))'.format(ROOTDIR+path)
                 for path in paths if os.path.isfile(ROOTDIR+path)
                 )
-            
+
             # enter the code and set up some jscript to toast the extension
             self.enter(code, False)
             jscript += 'toast_extension("{0}");'.format(extension)
-        
+
         # if this is the shell extension (a special case) update the shell client
-        if extension == 'shell': jscript += 'connected(2)' 
-        
+        if extension == 'shell': jscript += 'connected(2)'
+
         # finish by sending the jscript to the shell
         radio.send('pin0', json.dumps({'jscript': jscript}))
 
 
-    def parse(self, code):
-        
-        '''This method is called by self.enter with the string to be entered. The
-        string passed in may not be valid Python, but the string returned will be.
-        If that can't be done, False is returned as the second return value. It is
-        on to the caller to check that second value and handle bad input.
-        
-        All this method currently does is handle commands, converting something
-        like the following line into the one below it:
-        
-            .edit -new main.py
-        
-            spam('-new main.py')
-        
-        The actual implemetation sucks, but it does work in practice, and can be
-        improved without fallout.'''
-
-        code = code.strip()
-
-        # if it's just python, there's nothing to do
-        if not code.startswith('.'): return code, True
-
-        # split the input into tokens
-        tokens = code[1:].split()
-
-        # if there's no args, just add parens to the callable and return
-        if len(tokens) == 1: return '{0}()'.format(tokens[0]), True
-
-        # get the whole arg string (args are parsed by the callable)
-        arg = code[len(tokens[0])+2:].strip()
-
-        ## quote the arg as cleanly as possible, returning bad news if it
-        ## can't be wrapped in quotes without adding escape characters
-        ## it's this string that's executed and then rendered in the shell
-
-        def either_end(char): return arg.startswith(char) or arg.endswith(char)
-
-        if   "'" not in arg: template = "{0}('{1}')"
-        elif '"' not in arg: template = '{0}("{1}")'
-        elif "'''" not in arg and not either_end("'"): template = "{0}('''{1}''')"
-        elif '"""' not in arg and not either_end('"'): template = '{0}("""{1}""")'
-        else: return '', False
-
-        # format the template and return the result
-        return template.format(tokens[0], code[len(tokens[0])+2:]), True
-
-
 class Socket(WebSocket):
-    
+
     '''This class subclasses the ws4py websocket, allowing websocket
     clients to be wrapped by the radio abstraction.'''
 
     def __init__(self, *args, **kargs):
+
+        '''New websockets can be registered with the radio on creation.
+        Channel names can be passed in the URL, for example:
+            
+            ws://localhost:1002/ws/chan0/chan1
         
-        '''Creates and registers new websockets with the radio.'''
+        '''
 
         WebSocket.__init__(self, *args, **kargs)
-    
-        # channel names are passed in the url, i.e. /ws/chan0/chan1
-        # this line extracts them into a list of channel names
+
         channels = str(self.environ['REQUEST_URI'])[2:-1].split('/')[2:]
-        
-        # register the current socket's send method as the callable
-        radio.register(channels, self.send)
+
+        radio.register(channels, self.send, True)
 
 
     def closed(self, code, reason=None):
 
-        '''Deregisters (removes) websocket clients from the radio's
-        dictionary of handlers.'''
-        
+        '''This method deregisters websocket clients from the radio.
+        It's a bit of a dig to actually get to them, but the set up
+        is optimised for sending messages; deleting clients is much
+        less common.'''
+
         for channel, handlers in radio.channels.items():
 
-            if self.send in handlers: handlers.remove(self.send)
+            for handler in handlers:
+                
+                if handler.handler == self.send: handlers.remove(handler)
 
+
+    def received_message(self, message):
+        
+        '''This method receives all messages sent by websocket clients,
+        but it is currently only used to allow clients to register more
+        channels.'''
+        
+        channels = json.loads(message.data.decode())
+        radio.register(channels, self.send, True)
+
+
+class MessageHandler:
+    
+    '''This class is used by the Radio.register method. The radio stores
+    each handler that's registered as a MessageHandler instance. This is
+    mainly done to allow the channel and message data to be stringified
+    automatically for those handlers that can only receive one arg as a
+    message (websockets), while not requiring local Python functions to
+    receive their args inside a JSON string.'''
+    
+    def __init__(self, handler, stringify=False):
+        
+        self.handler = handler
+        self.stringify = stringify
+        
+    def send(self, channel, message):
+        
+        if self.stringify:
+            
+            message = json.dumps({'channel': channel, 'message': message})
+            self.handler(message)
+        
+        else: self.handler(channel, message)
+    
 
 class Radio:
 
@@ -218,29 +222,32 @@ class Radio:
     the websocket. The radio is a global in the user's namespace. It is also
     accessable from external clients, via the server. Javascript clients use
     wrappers around websockets to interface with the radio.
-    
+
     Channels are just unique strings (among channel names). Any callable can
     be registered to any number of channels, and each channel can have any
     number of callables registered to it.
-    
+
     Messages are strings. Use JSON if you need to send more complex data.
     '''
 
     channels  = {} # a dict mapping each channel name to a list of callables
 
-    def register(self, channels, handler):
-        
+    def register(self, channels, handler, stringify=False):
+
         '''This method accepts a channel name, as a string, or a list of them
         (as a list of strings), and a handler (any callable). The callable is
         registered to receive messages on each of the channels.'''
+
+        handler = MessageHandler(handler, stringify)
 
         if type(channels) is str: channels = [channels]
 
         for channel in channels:
 
-            # if the channel exists, append the callable to it's handlers list
-            # if it does not not, create a list with only the handler in
-            if channel in self.channels: self.channels[channel].append(handler)
+            if channel in self.channels:
+                
+                self.channels[channel].append(handler)
+            
             else: self.channels[channel] = [handler]
 
 
@@ -254,7 +261,9 @@ class Radio:
 
         for channel in channels:
 
-            for handler in self.channels[channel]: handler(message)
+            for handler in self.channels[channel]:
+                
+                handler.send(channel, message)
 
 
 class Server:
@@ -262,7 +271,7 @@ class Server:
     '''This is the main server that provides communication between the user's
     namespace and external clients. It lives inside the nush module. Other
     objects exist in the global namespace that abstract it.
-    
+
     The nush module will attach another handler to this server, called nush.
     That handler lives inside a singleton that provides an API that the user
     can use to assign handler functions and classes ~ where each method acts
@@ -273,6 +282,9 @@ class Server:
 
     @cherrypy.expose # serve the shell client as a static file
     def index(self): return open(ROOTDIR+'/static/apps/shell/shell.html')
+
+    @cherrypy.expose # serve the interpreter's input history
+    def line_history(self): return json.dumps(interpreter.line_history)
 
     @cherrypy.expose # expose the interpreter's enter method
     def enter(self):
@@ -302,28 +314,15 @@ interpreter = Interpreter()
 cherrypy.config.update({
     'server.socket_host': '127.0.0.1',
     'server.socket_port': 10002,
-    'environment': 'production' # comment this out to debug
+    'environment': 'production'
     })
 
 # plumb in ws4py's cherrypy websocket plugin
 WebSocketPlugin(cherrypy.engine).subscribe()
 cherrypy.tools.websocket = WebSocketTool()
 
-# serve static resources, the whole filesystem and the websocket
-cherrypy.quickstart(server, '/', {
-
-    '/static': { # serve static files
-        'tools.staticdir.on': True,
-        'tools.staticdir.dir': ROOTDIR+'/static'
-        },
-
-    '/': { # serve the filesystem
-        'tools.staticdir.on': True,
-        'tools.staticdir.dir': '/'
-        },
-
-    '/ws': { # serve the websocket
-        'tools.websocket.on': True,
-        'tools.websocket.handler_cls': Socket
-
-        }})
+# start serving everything
+cherrypy.quickstart(server, '/', {'/ws': {
+    'tools.websocket.on': True,
+    'tools.websocket.handler_cls': Socket
+    }})

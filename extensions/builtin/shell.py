@@ -1,15 +1,13 @@
 
-
-        # NUSH 0.3 SHELL EXTENSION
-        # This is Free Software (GPL)
+        # NUSH: SHELL EXTENSION
 
 class Shell:
 
     '''This class implements a singleton, named shell, that wraps the shell clients for the
     user. They're expected to interact with the shell through the API created here.'''
 
-    with open(nush.ROOTDIR+'/static/apps/shell/license.html') as f: license_info = f.read()
-
+    license_info = open(nush.ROOTDIR+'/static/apps/shell/license.html').read()
+    
     def send(self, data):
         
         '''This method just sends a message to the shell. The shell expects packages, which
@@ -70,9 +68,9 @@ class Shell:
         '''This method creates a feed with a frame in the shell. See the user docs for more
         information on how it works.'''
 
-        height = height * 14
+        height = height * 16
         height = str(height) + 'px'
-        body = '<iframe src="{0}" scrolling=yes style="width: 100%; border: 1px solid #222; height: {1}"></iframe>'
+        body = '<iframe src="{0}" scrolling=yes style="height:{1}"></iframe>'
         self.create_feed(color, title, message, body.format(path, height))
 
 
@@ -108,11 +106,14 @@ def view(path=''):
     if not path: path = os.getcwd()
     else: path = path_resolve(path)
 
-    ends = path.endswith
+    # if it's just a web address, done
+    if nush.urlparse(path).scheme: return shell.create_tab(path)
 
     ## handle viewing a file...
     
     if os.path.isfile(path):
+        
+        ends = path.endswith
 
         if ends('.sh.py'): return None # TODO
 
@@ -132,7 +133,7 @@ def view(path=''):
         elif ends('.png') or ends('.jpg') or ends('.jpeg'):
 
             message = 'rendering the image at'
-            body = '<img src="{0}">'.format(path)
+            body = '<img height="200" src="{0}">'.format(path)
 
         else: return shell.create_frame(
                 'green', 'view', 'rendering the text file at <hi>{0}</hi>'.format(path),

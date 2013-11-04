@@ -1,31 +1,23 @@
 
-
-        # NUSH 0.3 CORE NAMESPACE
-        # This is Free Software (GPL)
-
+        # NUSH: CORE NAMESPACE
 
 # standard library stuff
 import os
 import cgi
 import json
 import shutil
+import mimetypes
 from time import sleep
 from threading import Thread, Condition
 from subprocess import Popen, PIPE
+from string import ascii_letters, digits
+from urllib.parse import urlparse
 
 # third party stuff
 import cherrypy
-import jedi
-
-# tweak jedi's settings
-from jedi import settings
-settings.case_insensitive_completion = False
-settings.add_bracket_after_function = True
-del settings
 
 # nush stuff
 import pipes
-
 
 class DomainsManager:
     
@@ -93,7 +85,7 @@ class OrphanHandlers:
 
 class CoreBuiltIns:
     
-    '''This implements is a class handler, registered at /nush/buitlin . It holds all the
+    '''This implements a class handler, registered at /nush/builtin . It holds all the
     builtin handlers that are not hardcoded into the server.'''
 
     domain = 'builtin'
@@ -169,28 +161,6 @@ class CoreBuiltIns:
         radio.send(data['channels'], data['message'])
 
 
-    def complete(self, data):
-        
-        '''This method provides autocompletion data to clients. It uses the Jedi library's
-        plugin API, with the interpreter's namespace passed in. It returns a list of all
-        the completions that are not empty strings, serialised in JSON.
-        
-        In its current form, the call to jedi.api.Interpreter tends to throw exceptions
-        all the time. In the case of an error, an empty list is returned. This works in
-        practice [suprisingly well], and will be revisited.'''
-
-        data = json.loads(data)
-        line, index, source = data['line'], data['index'], data['content']
-        
-        try: return json.dumps([
-            '<completion onclick=editor.insert("{0}");editor.focus()>{0}</completion>'.format(res.complete)
-            for res in jedi.api.Interpreter(source, [interpreter.locals], line=line, column=index).completions()
-            if res.complete
-            ])
-        
-        except: return '[]'
-
-
 def superpin():
 
     '''This function increments superspace['superpin'], then generates a pin, a string
@@ -211,8 +181,8 @@ def feed(color, title, message, body=''):
     if body: body = '<div class=padded_feed>{0}</div>'.format(body)
 
     feed = '''
-        <span class="{0}">{1}</span> <span class=grey>#</span>
-        <span style="float: right" onclick="this.parentNode.parentNode.removeChild(this.parentNode); editor.focus()">
+        <span class="{0}">{1}</span> <span class=grey>#</span><span style="float:right"
+        onclick="this.parentNode.parentNode.removeChild(this.parentNode); editor.focus()">
         <span style="padding-right: 4px" class="dull kill_button hint--left hint--bounce"
             data-hint="Delete This Feed">x</span></span>
         {2}{3}'''.format(color, title, message, body)
@@ -234,43 +204,45 @@ def escape_html(html):
 
 def path_resolve(path):
 
-    '''This function patches the way paths are printed, so they look consistant. It is a
-    relic of Droidspace, where it handled Android's atypical filesystem. It can probably
-    be gotten rid off, or at least factored into the path_expand function below.'''
+    '''This function patches the way paths are expanded, so they're consistant.'''
 
-    if not path: return path
+    # don't expand comlpete urls
+    if not path or urlparse(path).scheme: return path
+    
     path = path_expand(path)
+    
+    # chop off any trailing slash
     if path != '/' and path.endswith('/'): path = path[:-1]
+    
+    # strip double slashes (when going up from root as cwd)
     return path[1:] if path.startswith('//') else path
 
 
 def path_expand(path):
 
     '''This function takes a relative path, which may use a bookmark, and returns an
-    absolute path. Commands use this function extensively.'''
+    absolute path.'''
 
-    cwd = os.getcwd()
-    dad = os.path.dirname(cwd)
     starts = path.startswith
     normalise = os.path.normpath
 
     if   starts('/'):   return path
-    elif starts('./'):  return normalise(cwd + path[1:])
-    elif starts('../'): return normalise(dad + path[2:])
+    elif starts('./'):  return normalise(os.getcwd() + path[1:])
+    elif starts('../'): return normalise(os.path.dirname(os.getcwd()) + path[2:])
     elif starts('~/'):  return os.path.expanduser("~") + path[1:]
     elif starts('|'):
 
         try:
 
-            if not '/' in path: return BOOKMARKS[path[1:]]
-
+            if '/' not in path: return BOOKMARKS[path[1:]]
+            
             name = path[1:path.find('/')]
             tail = path[path.find('/'):]
             return BOOKMARKS[name] + tail
 
         except KeyError: return path
 
-    else: return cwd + '/' + path
+    else: return os.getcwd() + '/' + path
 
 
 def dir2html(path):
@@ -306,6 +278,74 @@ def dir2html(path):
     return dirs + files if dirs or files else '<span class=dull>(this directory is empty)</span>'
 
 
+def find(path):
+    
+    '''This function takes a breadcrumbs path and returns the thing it evaluates to, from
+    within the interpreter. For example, if the path is 'a.b.c', then a reference to the
+    object a.b.c from the user's namespace would be returned.'''
+    
+    names = path.split('.')
+    name  = names.pop(0)
+    
+    try: obj = interpreter.locals[name]
+    except KeyError:
+        try: obj = __builtins__[name]
+        except KeyError: return None
+
+    for name in names: obj = getattr(obj, name)    
+    return obj
+
+
+class Finder:
+
+    def __init__(self):
+        
+        self.home, self.root = HOME, ROOTDIR
+        self.statics = []
+
+    def resolve(self, path): return path_resolve(path)
+    
+    def is_url(self, path): return True if urlparse(self.resolve(path)).scheme else False
+    
+    def open(self, path, mode='r'): return open(self.resolve(path), mode)
+    
+    def read(self, path): return open(self.resolve(path)).read()
+    
+    def write(self, path, content): open(self.resolve(path), 'w').write(content)
+    
+    def find_static(self, *args):
+        
+        '''This method is assigned to handle all requests to /static . It takes
+        the request path, minus the static part, and concatenates it to each of
+        the paths in self.statics to see if it produces a path to a file. If it
+        does, the file's returned, else a 404 Error.
+        
+        The idea is that users can put stuff in their own directories, and have
+        them served as static files, by appending the directory to self.statics
+        and requesting /static/path/to/file.html . The first file found will be
+        returned immediately, and self.statics is iterated over in order.
+        
+        A final check is done to see if the file lives in ./nush/static , which
+        acts like a JavaScript Standard Library for users, and holds all nush's
+        own stuff.'''
+        
+        path = '/'.join(args)
+        
+        for static in self.statics:
+            
+            if os.path.isfile(static+path):
+                
+                return cherrypy.lib.static.serve_file(static+path)
+            
+        if os.path.isfile(self.root+'/static/'+path):
+            
+            return cherrypy.lib.static.serve_file(self.root+'/static/'+path)
+            
+        return cherrypy.HTTPError(status=404, message='No file at *'+path)
+    
+    find_static.exposed = True
+
+
 def bosh(line):
 
     '''Get the output of a system command as a string. This is unused, and is experimental.'''
@@ -313,13 +353,6 @@ def bosh(line):
     stdout, stderr = Popen([line], shell=True, stdout=PIPE, stderr=PIPE).communicate()
     output = stdout if stdout else stderr
     return(output.decode())
-
-
-def read(path):
-
-    '''Get the contents of a file from a path. This is currently unused.'''
-
-    return open(path_resolve(path)).read()
 
 
 def init():
@@ -330,11 +363,15 @@ def init():
     done, this module can safely reference them, but not before (on import). The job
     of this function is to tweak things once the objects are available.'''
 
-    global issue_pin, domains, handlers, builtin_handlers
+    global issue_pin, domains, handlers, builtin_handlers, finder
 
     issue_pin = superpin
     
-    # attach the domains manager to the server, at /nush
+    # attach the finder's statics method to server at /static
+    finder = Finder()
+    server.static = finder.find_static
+    
+    # attach the domains manager to the server at /nush
     domains = DomainsManager()
     server.nush = domains.handle
     
@@ -361,14 +398,14 @@ ROOTDIR = os.path.dirname(os.path.abspath(__file__))
 BOOKMARKS = json.loads(open(ROOTDIR+'/static/apps/shell/bookmarks.json').read())
 
 # this code is executed inside the interpreter when it's created. it calls the init
-# method from this module, then imports a bunch of stuff from it afterwards. while
-# it doesn't use the extensions system proper, it registers itself as an extension
-# allowing the shell extension to load safely
+# method from this module, then imports a bunch of stuff from the module afterwards
+# while the code doesn't really /use/ the extensions system, it registers itself as
+# an extension, allowing dependent extensions to load safely
 namespace = '''
 import os
 nush.init()
 from nush import issue_pin
-from nush import handlers, domains, radio
 from nush import superspace, path_resolve
+from nush import handlers, domains, radio
 nush.interpreter.extensions.append('core')
 '''

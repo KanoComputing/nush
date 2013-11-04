@@ -7,7 +7,7 @@
 var run = eval; // because ace will complain about eval
 var time;
 
-function ajax_request(method, url, async, data) {
+function ajax_request(method, url, async, data, handler) {
 
     // make an ajax request and return the response
     var request = new XMLHttpRequest();
@@ -18,9 +18,11 @@ function ajax_request(method, url, async, data) {
             }};
 
     request.open(method, url, async);
-    if (data) { request.send(data) }
-    else { request.send() }
-    return request;
+    if (data) request.send(data);
+    else request.send();
+    
+    if (handler) handler(request);
+    else return request;
     }
 
 
@@ -45,7 +47,7 @@ function enter(code, seen) {
 function extend(extension, paths, redo) {
 
     // extend the interpreter's namespace with a list of paths
-    ajax_request('POST', '/extend/'+extension+'/'+redo, true, JSON.stringify(paths))
+    ajax_request('POST', '/extend/'+extension+'/'+redo, true, JSON.stringify(paths));
     }
 
 
@@ -81,8 +83,8 @@ function radio_send(channels, message) {
 
     // send a message on channels (a string or array of strings)
     if (!$.isArray(channels)) { channels = [channels] }
-    data = JSON.stringify({'channels': channels, 'message': message})
-    ajax_request('POST', '/nush/builtin/radio_send', true, data)
+    data = JSON.stringify({'channels': channels, 'message': message});
+    ajax_request('POST', '/nush/builtin/radio_send', true, data);
     }
 
 // get a unique pin

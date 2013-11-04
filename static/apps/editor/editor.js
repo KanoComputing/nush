@@ -1,8 +1,5 @@
 
-
-        // NUSH 0.3 EDITOR
-        // This is Free Software (GPL)
-
+        // NUSH: EDITOR SCRIPT
 
 var lang = document.getElementById('lang').innerHTML,
     filepath = document.getElementById('filepath').innerHTML,
