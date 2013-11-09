@@ -161,8 +161,24 @@ class Superspace:
     space = {'SUPERPIN': 0}
     
     def __iter__(self): return ( key for key in self.space )
+
     def items(self): return self.space.items()
-    def pop(self, item): return self.space.pop(item)
+
+    def pop(self, item):
+
+        '''This method blocks every thread while it pops an item from the superspace.
+        It will also call stdin_lock.notifyAll, so that threads that want to block
+        and check if a key was removed can do.'''        
+        
+        with lock:
+            
+            stdin_lock.acquire()
+            item = self.space.pop(item)
+            stdin_lock.notifyAll()
+            stdin_lock.release()
+        
+        return item
+
 
     def update(self, data):
     
@@ -177,6 +193,7 @@ class Superspace:
             self.space.update(data)
             stdin_lock.notifyAll()
             stdin_lock.release()
+
     
     def remove(self, keys):
         
@@ -192,6 +209,7 @@ class Superspace:
             for key in keys: del self.space[key]
             stdin_lock.notifyAll()
             stdin_lock.release()
+
 
 def superpin():
 
