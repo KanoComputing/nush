@@ -80,7 +80,6 @@ editor.on('change', function () {
 
         };}();
 
-
 function connected(state) {
 
     // updates the banner and favicon whenever the connection state changes
@@ -93,7 +92,6 @@ function connected(state) {
     favicon.href = '/static/apps/shell/'+color+'_favicon.png';
     document.getElementById('bannerhead').className = color;
     }
-
 
 
 // -------- CLOCK SETUP ----------------
@@ -278,7 +276,9 @@ editor.commands.addCommand({
     bindKey: {win: 'Ctrl-Enter',  mac: 'Cmd-Enter'},
     exec: function(editor) {
 
-        enter(editor.getValue());
+        var content = editor.getValue();
+        if (!content) return false;
+        enter(content);
         editor.setValue('');
         ed.style.height = '16px';
         }});

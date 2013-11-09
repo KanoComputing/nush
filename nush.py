@@ -100,13 +100,9 @@ class CoreBuiltIns:
     def superspace(self, data=None):
 
         '''This method allows clients to update and/or get a copy of the superspace.'''
-
-        stdin_lock.acquire()
+        
         if data: superspace.update(json.loads(data))
-        stdin_lock.notifyAll()
-        stdin_lock.release()
-
-        return json.dumps(superspace)
+        return json.dumps(superspace.space)
 
 
     def editor(self, path):
@@ -157,9 +153,45 @@ class CoreBuiltIns:
         
         '''This method just exposes the radio object's send method to clients.'''
 
-        data = json.loads(data)
-        radio.send(data['channels'], data['message'])
+        radio.send(*json.loads(data))
 
+
+class Superspace:
+    
+    space = {'SUPERPIN': 0}
+    
+    def __iter__(self): return ( key for key in self.space )
+    def items(self): return self.space.items()
+    def pop(self, item): return self.space.pop(item)
+
+    def update(self, data):
+    
+        '''This method blocks every thread until it's updated the superspace. It will
+        also call stdin_lock.notifyAll, so that threads that're blocking until a key
+        becomes available will know to check for it. The shell's input function uses
+        this to block until prompts to return something.'''
+        
+        with lock:
+        
+            stdin_lock.acquire()
+            self.space.update(data)
+            stdin_lock.notifyAll()
+            stdin_lock.release()
+    
+    def remove(self, keys):
+        
+        '''This method blocks every thread until it's removed one or more items from
+        the superspace. It will also call stdin_lock.notifyAll, so that threads that
+        want to block and check if a key was removed can do.'''
+        
+        if type(keys) == str: keys = [keys]
+        
+        with lock:
+            
+            stdin_lock.acquire()
+            for key in keys: del self.space[key]
+            stdin_lock.notifyAll()
+            stdin_lock.release()
 
 def superpin():
 
@@ -168,9 +200,9 @@ def superpin():
     accessed by clients, through wrappers, so that any process can get a universally
     unique string, which can be used for anything that needs one, such as keys for
     the superspace and HTML element id values.'''
-
-    superspace['SUPERPIN'] += 1
-    return 'pin' + str(superspace['SUPERPIN'])
+    
+    superspace.space['SUPERPIN'] += 1
+    return 'pin' + str(superspace.space['SUPERPIN'])
 
 
 def feed(color, title, message, body=''):
@@ -385,8 +417,7 @@ def init():
 
 ## set up some globals...
 
-# a place for data that is shared by, or passed between, processes
-superspace = {'SUPERPIN': 0}
+superspace = Superspace()
 
 # the current user's home directory
 HOME = os.path.expanduser("~")

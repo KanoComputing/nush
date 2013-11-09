@@ -4,7 +4,7 @@
 # standard library stuff
 import os, sys, json
 from time import sleep
-from threading import Thread
+from threading import Thread, Lock
 from code import InteractiveInterpreter
 
 # third party stuff
@@ -48,7 +48,9 @@ class Interpreter(InteractiveInterpreter):
         interpreter's namespace, so they're globals to the user.
         '''
 
-        nush.server, nush.radio, nush.interpreter = server, radio, self
+        nush.server, nush.radio, nush.lock, nush.interpreter = (
+            server, radio, lock, self
+            )
 
         InteractiveInterpreter.__init__(self, {'nush': nush})
 
@@ -64,8 +66,10 @@ class Interpreter(InteractiveInterpreter):
         The seen argument determines if the input is echoed in the shell. It
         is possible for clients to enter code silently, so it doesn't appear
         to be user input.'''
-        
+
         string = string.strip()
+
+        if string == '.': string = '.shell.clear'
 
         if seen:
 
@@ -83,10 +87,15 @@ class Interpreter(InteractiveInterpreter):
 
         if string.startswith('.'):
 
+            if '\n' in string:
+
+                self.runcode("raise SyntaxError('keep commands to one line')")
+                return
+
             call = string[1:].split()[0] # everything before the first space
             args = string[len(call)+2:]  # everything after the first space
-            func = nush.find(call)       # a reference to the callable object  
-            
+            func = nush.find(call)       # a reference to the callable object
+
             if args: func(args)
             else: func()
 
@@ -111,7 +120,7 @@ class Interpreter(InteractiveInterpreter):
 
         No extension can load until the core extension is loaded, which is
         done when nush.namespace is entered at the end of self.__init__ .
-        
+
         No other extension, apart from the core, can load until the shell's
         extension has loaded, so further extensions can depend on the shell
         existing and the namespace being ready to manage it.
@@ -156,65 +165,63 @@ class Socket(WebSocket):
 
         '''New websockets can be registered with the radio on creation.
         Channel names can be passed in the URL, for example:
-            
+
             ws://localhost:1002/ws/chan0/chan1
-        
+
+        A socket may be created with no channels, and then register one
+        or more later. This is how the client side radio objects work
+        internally.
         '''
 
         WebSocket.__init__(self, *args, **kargs)
 
+        # derive a list of zero or more channels from the url
         channels = str(self.environ['REQUEST_URI'])[2:-1].split('/')[2:]
 
+        # if channels is empty, this does nothing
         radio.register(channels, self.send, True)
 
 
     def closed(self, code, reason=None):
 
-        '''This method deregisters websocket clients from the radio.
-        It's a bit of a dig to actually get to them, but the set up
-        is optimised for sending messages; deleting clients is much
-        less common.'''
+        '''This method deregisters a websocket client from the radio.'''
 
-        for channel, handlers in radio.channels.items():
-
-            for handler in handlers:
-                
-                if handler.handler == self.send: handlers.remove(handler)
+        radio.deregister(self.send)
 
 
     def received_message(self, message):
-        
+
         '''This method receives all messages sent by websocket clients,
         but it is currently only used to allow clients to register more
         channels.'''
-        
+
         channels = json.loads(message.data.decode())
         radio.register(channels, self.send, True)
 
 
 class MessageHandler:
-    
+
     '''This class is used by the Radio.register method. The radio stores
     each handler that's registered as a MessageHandler instance. This is
     mainly done to allow the channel and message data to be stringified
     automatically for those handlers that can only receive one arg as a
     message (websockets), while not requiring local Python functions to
     receive their args inside a JSON string.'''
-    
+
     def __init__(self, handler, stringify=False):
-        
+
         self.handler = handler
         self.stringify = stringify
-        
+
     def send(self, channel, message):
-        
+
         if self.stringify:
-            
+
             message = json.dumps({'channel': channel, 'message': message})
             self.handler(message)
-        
+
         else: self.handler(channel, message)
-    
+
 
 class Radio:
 
@@ -245,10 +252,50 @@ class Radio:
         for channel in channels:
 
             if channel in self.channels:
-                
+
                 self.channels[channel].append(handler)
-            
+
             else: self.channels[channel] = [handler]
+
+
+    def deregister(self, dead_handler):
+
+        '''This method deregisters every reference to a previously registered
+        handler, and then deletes any channels that end up with no registered
+        handlers as a result.'''
+
+        # this method has to delete stuff from the objects it iterates over
+        # and it can be called in multiple threads, so it gets pretty loopy
+
+        with lock: # lock everything
+
+            dead_message_handlers = []
+
+            for _, message_handlers in radio.channels.items():
+
+                for message_handler in message_handlers:
+
+                    if message_handler.handler == dead_handler:
+
+                        dead_message_handlers.append(message_handler)
+
+                for dead_message_handler in dead_message_handlers:
+
+                    message_handlers.remove(dead_message_handler)
+
+                dead_message_handlers = []
+
+            empty_channels = []
+
+            for channel in radio.channels:
+
+                if not radio.channels[channel]:
+
+                    empty_channels.append(channel)
+
+            for empty_channel in empty_channels:
+
+                del radio.channels[empty_channel]
 
 
     def send(self, channels, message):
@@ -261,8 +308,10 @@ class Radio:
 
         for channel in channels:
 
+            if channel not in self.channels: return
+
             for handler in self.channels[channel]:
-                
+
                 handler.send(channel, message)
 
 
@@ -306,6 +355,7 @@ class Server:
 
 
 # globals
+lock = Lock()
 radio = Radio()
 server = Server()
 interpreter = Interpreter()

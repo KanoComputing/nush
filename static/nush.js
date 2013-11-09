@@ -79,13 +79,41 @@ function radio_socket(channels) {
     return new WebSocket('ws://localhost:10002/ws/' + channels);
     }
 
-function radio_send(channels, message) {
 
-    // send a message on channels (a string or array of strings)
-    if (!$.isArray(channels)) { channels = [channels] }
-    data = JSON.stringify({'channels': channels, 'message': message});
-    ajax_request('POST', '/nush/builtin/radio_send', true, data);
-    }
+function Radio() {
+    
+    this.ws = new WebSocket('ws://localhost:10002/ws');
+    var channels = {};
+    
+    this.register = function(_channels, handler) {
+        
+        if (!$.isArray(_channels)) _channels = [_channels];
+        
+        _channels.forEach(function (channel) {
+
+            if (!channels.hasOwnProperty(channel)) channels[channel] = [handler];
+            else channels[channel].push(handler);
+            });
+        
+        this.ws.send(JSON.stringify(channels));
+        };
+        
+    this.send = function(channels, message) {
+        
+        var data = JSON.stringify([channels, message]);
+        ajax_request('POST', '/nush/builtin/radio_send', true, data);
+        };
+    
+    this.ws.onmessage = function(event) {
+        
+        var data = JSON.parse(event.data);
+        var message = data.message;
+        var channel = data.channel;
+        channels[channel].forEach(function(handler) { handler(channel, message) }
+        )};
+    
+    return this;
+}
 
 // get a unique pin
 function issue_pin() { return ajax_request("GET", "/nush/builtin/issue_pin", false) }
