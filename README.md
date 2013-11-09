@@ -14,4 +14,5 @@ If that doesn't sound like fun, you probably won't like it.
 
 Nush is currently unpackaged, so you'll need to clone the repo and run `python3 nush/main.py`.
 
-Nush is GPLv3 licensed. Please flick through the wiki for more information on how to use it.
+Nush is GPLv3 licensed. Please flick through the [wiki](https://github.com/carlsmith/nush/wiki)
+for more information on how to use it.
