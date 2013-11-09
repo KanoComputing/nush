@@ -104,10 +104,12 @@ def view(path=''):
     the type of thing it is rendering. See the user docs for more information.'''
 
     if not path: path = os.getcwd()
-    else: path = path_resolve(path)
+    else: path = finder.resolve(path)
 
     # if it's just a web address, done
-    if nush.urlparse(path).scheme: return shell.create_tab(path)
+    if nush.urlparse(path).scheme: return shell.create_frame(
+        'green', 'view', 'rendering a frame, starting at <hi>{0}</hi>'.format(path), path, 32
+        )
 
     ## handle viewing a file...
     
@@ -177,7 +179,7 @@ def edit(path=''):
                 'red', 'edit', 'you need to provide a path to the new file'
                 )
 
-        path = path_resolve(tokens[1])
+        path = finder.resolve(tokens[1])
 
         # throw one if the path points to an existing file
         if os.path.isfile(path): return shell.create_feed(
@@ -200,7 +202,7 @@ def edit(path=''):
     
     else:
 
-        path = path_resolve(path)
+        path = finder.resolve(path)
         if not os.path.isfile(path): return shell.create_feed(
                 'red', 'edit', 'there\'s no file at <hi>{0}</hi>'.format(path)
                 )
@@ -261,7 +263,7 @@ def mark(args=''):
     # else if the user wants to create a new bookmark...
 
     if length == 1: name, path = tokens[0], os.getcwd()       # bookmark the current working directory
-    else: name, path = tokens[1], path_resolve(tokens[0])   # bookmark the given path
+    else: name, path = tokens[1], finder.resolve(tokens[0])   # bookmark the given path
 
     nush.BOOKMARKS[name] = path
     update_bookmarks_file()
@@ -283,7 +285,10 @@ def goto(path=''):
         message = 'the working directory is now <hi>{0}</hi>'.format(nush.HOME)
         return shell.create_feed('green', 'goto', message)
 
-    path = path_resolve(path)
+    path = finder.resolve(path)
+    
+    # if it's just a web address, done
+    if nush.urlparse(path).scheme: return shell.create_tab(path)
 
     try: os.chdir(path)
     except OSError:
@@ -308,7 +313,7 @@ def move(args=''):
         'red', 'move', 'you must provide two paths: <hi>.move /from /to</hi>'
         )
         
-    item, destination = path_resolve(tokens[0]), path_resolve(tokens[1])
+    item, destination = finder.resolve(tokens[0]), finder.resolve(tokens[1])
     
     # check if the item to be moved is a file or directory, throwing one if it's neither
     if os.path.isdir(item): kind = 'directory'
