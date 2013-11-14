@@ -38,8 +38,8 @@ class Interpreter(InteractiveInterpreter):
     def __init__(self):
 
         '''This method grabs everything outside the interpreter, binding it
-        all to the nush module object, making the server, radio and this
-        interpreter new globals in that namespace. The nush module is
+        all to the nush module object, making the server, radio, the lock
+        and this interpreter new globals in that namespace. The module is
         then passed into the new interpreter.
 
         Some startup code is then executed. This code initialises some stuff
@@ -62,6 +62,9 @@ class Interpreter(InteractiveInterpreter):
         '''This method takes a string of code. If it's a command, it's parsed
         and the callable gets called, otherwise the input string is executed
         in the interpreter.
+
+        Special Case: An input which contains one dot, ignoring whitespace,
+        is just converted to the command .shell.clear .
 
         The seen argument determines if the input is echoed in the shell. It
         is possible for clients to enter code silently, so it doesn't appear
@@ -96,8 +99,21 @@ class Interpreter(InteractiveInterpreter):
             args = string[len(call)+2:]  # everything after the first space
             func = nush.find(call)       # a reference to the callable object
 
-            if args: func(args)
-            else: func()
+            if func == None:
+
+                message = "'<hi>{0}</hi> does not evaluate to anything'".format(call)
+                self.runcode("shell.create_feed('red', 'nush', {0})".format(message))
+                return
+
+            try:
+
+                if args: func(args)
+                else: func()
+
+            except TypeError:
+
+                message = "'<hi>{0}</hi> does not evaluate to a callable'".format(call)
+                self.runcode("shell.create_feed('red', 'nush', {0})".format(message))
 
         else: self.runcode(string)
 
@@ -109,9 +125,9 @@ class Interpreter(InteractiveInterpreter):
         Note: The files are not imported; they are just executed inside the
         namespace, allowing the interpreter to be extended easily.
 
-        This method accepts an extension name, a list of file paths and a redo
-        bool. If redo is truthy, the extension will be loaded even if it has
-        been loaded already, otherwise not.
+        This method accepts an extension name, a list of paths to files and
+        a redo bool. If redo is truthy, the extension will be loaded even
+        if it has been loaded already, otherwise not.
 
         An extension typically consists of one file that actually extends
         the namespace, and another, of the same name, but living in the
@@ -243,19 +259,22 @@ class Radio:
 
         '''This method accepts a channel name, as a string, or a list of them
         (as a list of strings), and a handler (any callable). The callable is
-        registered to receive messages on each of the channels.'''
+        registered to receive messages on each of the channels.
+        '''
 
         handler = MessageHandler(handler, stringify)
 
         if type(channels) is str: channels = [channels]
 
-        for channel in channels:
+        with lock: # lock every thread for now; this should never take long
 
-            if channel in self.channels:
+            for channel in channels:
 
-                self.channels[channel].append(handler)
+                if channel in self.channels:
 
-            else: self.channels[channel] = [handler]
+                    self.channels[channel].append(handler)
+
+                else: self.channels[channel] = [handler]
 
 
     def deregister(self, dead_handler):
@@ -265,9 +284,10 @@ class Radio:
         handlers as a result.'''
 
         # this method has to delete stuff from the objects it iterates over
-        # and it can be called in multiple threads, so it gets pretty loopy
+        # and it can be called in multiple threads, so it looks a bit hairy
+        # [starting to question the struct, but this is just clean up code]
 
-        with lock: # lock everything
+        with lock: # lock every thread for now; this should never take long
 
             dead_message_handlers = []
 
