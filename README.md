@@ -4,15 +4,13 @@ nush
 Nush [the trendy new shell] is a graphical, Python3 and HTML5, interactive development environment that runs in your browser.
 It's very easy for new programmers to use, while still being a powerful tool for wizards.
 
-**NOTE:** *While the software generally works, and can be used as documented, the API is not stable.*
-*The current version is offered as an open prototype for interested parties to hack on and to share progress.*
+Nush is being developed to support [Kano OS](http://www.kano.me/). The end goal is to provide an environment for Kano
+that will achieve a few things:
 
-The goal is to do a bunch of things for Kano OS...
-
-- provide an integrated environment, a graphical shell, where programming and using Kano are indistinct
-- make it simple, light and fun to hack the system and browser
-- provide libraries of *orbs*, interesting little Python objects that can be hacked interactively and rendered graphically
-- provide tools that help hackers and tech writers develop orbs
+- make it simple and fun to learn programming and create graphical applications that do useful things
+- teach computing and test skills by getting kids hacking *foos*, mysterious Python objects that can be
+  imported and explored interactively and are rendered using all the latest HTML5 chrome
+- provide tools that make it easier to use Kano and develop awesome foos
 
 Please flick through the [wiki](https://github.com/carlsmith/nush/wiki) for more information on the project
 and how to use the software.
