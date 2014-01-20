@@ -83,7 +83,8 @@ function radio_socket(channels) {
 function Radio() {
     
     this.ws = new WebSocket('ws://localhost:10002/ws');
-    var channels = {};
+    channels = {};
+    this.channels = channels;
     
     this.register = function(_channels, handler) {
         

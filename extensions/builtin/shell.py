@@ -344,40 +344,6 @@ def move(args=''):
         )
 
 
-def stdo(arg=''):
-
-    '''A command for switching the way stdout is processed. See the user docs for more
-    information.'''
-    
-    mode = nush.pipe.expand_mode(arg)
-    
-    if not mode: return shell.create_feed(
-        'red', 'stdo', 'there\'s no mode named <hi>{0}</hi>'.format(arg)
-        )
-        
-    nush.pipe.stdout(mode)
-    shell.create_feed(
-        'green', 'stdo', 'standard out has switched to <hi>{0}</hi> mode'.format(mode)
-        )
-
-
-def stde(arg=''):
-
-    '''A command for switching the way stderr is processed. See the user docs for more
-    information.'''
-    
-    mode = nush.pipe.expand_mode(arg)
-        
-    if not mode: return shell.create_feed(
-        'red', 'stde', 'there\'s no mode named <hi>{0}</hi>'.format(arg)
-        )
-        
-    nush.pipe.stderr(mode)
-    shell.create_feed(
-        'green', 'stde', 'standard error has switched to <hi>{0}</hi> mode'.format(mode)
-        )
-
-
 # this is the condition object that is used by threads to block while they wait for
 # input from a client. it is used by nush.superspace to notify any threads that the
 # superspace has been added to
@@ -398,7 +364,7 @@ def input(prompt='> '):
     <form id=%s onsubmit="return false" style=display:inline>%s<input class=stdin_prompt
     onkeyup="if (event.keyCode==13 && this.value) { submit_stdin(this.parentNode, this.value) }"
     type=text size=128 autofocus autocomplete=off></form>
-    ''' %(pin, prompt)
+    ''' % (pin, prompt)
 
     ## wait for the response, then return it...
     
@@ -417,24 +383,26 @@ def input(prompt='> '):
 # wrap sys.stdin, pointing it at the custom input function...
 
 class StdIn:
-    
+
     '''This class just wraps Python's stdin, hooking it to the shell, via the custom input
     function above.'''
     
     def isatty(self): return False
     def readline(self): return input()
 
-# hook up stdin and clear up the namespace (this is an extension file)
-import sys; sys.stdin = StdIn(); del sys, StdIn
 
+## tweak the namespace and set up the pipework...
 
-## tweak the namespace...
-
-import pdb
-trace = pdb.set_trace
+import sys
 
 shell = Shell()
 nush.shell = shell
 nush.pipe = nush.pipes.Pipes(nush.radio)
+put = nush.pipe.standard_put
+esc = nush.pipe.render
+sys.stdin = StdIn()
+sys.excepthook = nush.pipe.standard_error
+
+del Shell, StdIn
+
 shell.execute('connected(1)')
-del Shell

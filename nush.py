@@ -107,44 +107,20 @@ class CoreBuiltIns:
 
     def editor(self, path):
 
-        '''This method serves editor instances. It takes a path to the file that's to be
-        edited and templates editor.html before serving it.
+        '''This method serves new editor instances. It takes a path to the file that's to
+        be edited and inserts the path into editor.html before serving it. The new editor
+        instance will fetch the content of the file with a call to self.load_file once it
+        has fired up [else the content would be rendered by the browser].'''
 
-        Note that the file's content is not placed inside the instance when it's served,
-        as the content gets rendered by the browser. Instead, the templating injects the
-        information the editor instance needs to load. The instance will then fetch the
-        content with an ajax call to self.load_file .'''
-
-        highlighting = {
-            'py':   'python',
-            'htm':  'html',
-            'html': 'html',
-            'css':  'css',
-            'js':   'javascript',
-            'json': 'json'
-            }
-
-        ext = path.split('.')[-1]
-        try: lang = highlighting[ext]
-        except: lang = ''
-
-        appdir = ROOTDIR + '/static/apps/editor'
-        with open(appdir + '/editor.html') as f: editor = f.read()
-
-        return editor.replace(
-            '$$ title $$', path.split('/')[-1]
-            ).replace(
-            '$$ appdir $$', appdir
-            ).replace(
-            '$$ filepath $$', path
-            ).replace(
-            '$$ lang $$', lang
-            )
+        with open(ROOTDIR+'/static/apps/editor/editor.html') as f: editor = f.read()
+        return editor.replace('FILEPATH', path)
 
 
     def load_file(self, path, timestamp):
 
-        '''This method simply serves the contents of a text file, based on a path.'''
+        '''This method serves a file, given an absolute path to the file. The timestamp is
+        ignored, but it's passed by clients to prevent the file from being served from the
+        browser's cache.'''
 
         return open(path)
 
@@ -154,30 +130,6 @@ class CoreBuiltIns:
         '''This method just exposes the radio object's send method to clients.'''
 
         radio.send(*json.loads(data))
-
-
-def find(path):
-
-    '''This function takes a breadcrumbs path and returns the thing it evaluates to, from
-    within the interpreter. For example, if the path is 'a.b.c', then a reference to the
-    object a.b.c from the user's namespace would be returned. If the expression does not
-    evaluate, this function returns None.'''
-
-    names = path.split('.')
-    name  = names.pop(0)
-
-    try: obj = interpreter.locals[name]
-    except KeyError:
-
-        try: obj = __builtins__[name]
-        except KeyError: return None
-
-    try:
-
-        for name in names: obj = getattr(obj, name)
-        return obj
-
-    except AttributeError: return None
 
 
 class Finder:
@@ -196,8 +148,26 @@ class Finder:
     def read(self, path): return open(self.resolve(path)).read()
 
     def write(self, path, content): open(self.resolve(path), 'w').write(content)
+    
+    def inflate(self, path):
 
-    def find_static(self, *args):
+        names = path.split('.')
+        name  = names.pop(0)
+    
+        try: obj = interpreter.locals[name]
+        except KeyError:
+    
+            try: obj = __builtins__[name]
+            except KeyError: return None
+
+        try:
+    
+            for name in names: obj = getattr(obj, name)
+            return obj
+    
+        except AttributeError: return None
+
+    def static(self, *args):
 
         '''This method is assigned to handle all requests to /static . It takes
         the request path, minus the static part, and concatenates it to each of
@@ -227,7 +197,7 @@ class Finder:
 
         return cherrypy.HTTPError(status=404, message='No file at *'+path)
 
-    find_static.exposed = True
+    static.exposed = True
 
 
 class Superspace:
@@ -240,9 +210,9 @@ class Superspace:
 
     def pop(self, item):
 
-        '''This method blocks every thread while it pops an item from the superspace.
-        It will also call stdin_lock.notifyAll, so that threads that want to block
-        and check if a key was removed can do.'''
+        '''This method blocks every thread while it pops an item from the super-
+        space. It will also call stdin_lock.notifyAll, so that threads that want
+        to block and check if a key was removed can do.'''
 
         with lock:
 
@@ -256,10 +226,10 @@ class Superspace:
 
     def update(self, data):
 
-        '''This method blocks every thread until it's updated the superspace. It will
-        also call stdin_lock.notifyAll, so that threads that're blocking until a key
-        becomes available will know to check for it. The shell's input function uses
-        this to block until prompts to return something.'''
+        '''This method blocks every thread until it has updated the superspace. It
+        also calls stdin_lock.notifyAll, so that threads that are blocking until a
+        key becomes available will know to check it. The shell input function uses
+        this to block until stdin prompts return something.'''
 
         with lock:
 
@@ -305,11 +275,11 @@ def feed(color, title, message, body=''):
     if body: body = '<div class=padded_feed>{0}</div>'.format(body)
 
     feed = '''
-        <span class="{0}">{1}</span> <span class=grey>#</span><span style="float:right"
+        <span class="{0}">{1}</span> <span class=dull>#</span> <span style="float:right"
         onclick="this.parentNode.parentNode.removeChild(this.parentNode); editor.focus()">
         <span style="padding-right: 4px" class="dull kill_button hint--left hint--bounce"
-            data-hint="Delete This Feed">x</span></span>
-        {2}{3}'''.format(color, title, message, body)
+        data-hint="Delete This Feed">x</span></span>{2}{3}
+        '''.format(color, title, message, body)
 
     return json.dumps({'feed': feed, 'jscript': 'create_feed(pkg.feed)'})
 
@@ -402,21 +372,11 @@ def dir2html(path):
     return dirs + files if dirs or files else '<span class=dull>(this directory is empty)</span>'
 
 
-def bosh(line):
-
-    '''Get the output of a system command as a string. This is unused, and is experimental.'''
-
-    stdout, stderr = Popen([line], shell=True, stdout=PIPE, stderr=PIPE).communicate()
-    output = stdout if stdout else stderr
-    return(output.decode())
-
-
 def init():
 
-    '''This function is called after this module has been imported and placed inside the
-    interpreter's namespace. The interpreter's __init__ method binds references to the
-    server, radio and to itself to this module, making them globals here. Once that is
-    done, this module can safely reference them, but not before (on import). The job
+    '''This function is called after this module has been injected into the interpreter's
+    namespace. The interpreter's __init__ method binds references to the server, radio and
+    itself to this module. Once that's done, this module can safely reference them. The job
     of this function is to tweak things once the objects are available.'''
 
     global issue_pin, domains, handlers, builtin_handlers, finder
@@ -425,7 +385,7 @@ def init():
 
     # attach the finder's statics method to server at /static
     finder = Finder()
-    server.static = finder.find_static
+    server.static = finder.static
 
     # attach the domains manager to the server at /nush
     domains = DomainsManager()
