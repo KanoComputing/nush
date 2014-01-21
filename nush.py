@@ -137,7 +137,7 @@ class Finder:
     def __init__(self):
 
         self.home, self.root = HOME, ROOTDIR
-        self.statics = []
+        self.statics = {}
 
     def resolve(self, path): return path_resolve(path)
 
@@ -166,38 +166,6 @@ class Finder:
             return obj
     
         except AttributeError: return None
-
-    def static(self, *args):
-
-        '''This method is assigned to handle all requests to /static . It takes
-        the request path, minus the static part, and concatenates it to each of
-        the paths in self.statics to see if it produces a path to a file. If it
-        does, the file's returned, else a 404 Error.
-
-        The idea is that users can put stuff in their own directories, and have
-        them served as static files, by appending the directory to self.statics
-        and requesting /static/path/to/file.html . The first file found will be
-        returned immediately, and self.statics is iterated over in order.
-
-        A final check is done to see if the file lives in ./nush/static , which
-        acts like a JavaScript Standard Library for users, and holds all nush's
-        own stuff.'''
-
-        path = '/'.join(args)
-
-        for static in self.statics:
-
-            if os.path.isfile(static+path):
-
-                return cherrypy.lib.static.serve_file(static+path)
-
-        if os.path.isfile(self.root+'/static/'+path):
-
-            return cherrypy.lib.static.serve_file(self.root+'/static/'+path)
-
-        return cherrypy.HTTPError(status=404, message='No file at *'+path)
-
-    static.exposed = True
 
 
 class Superspace:
@@ -275,7 +243,7 @@ def feed(color, title, message, body=''):
     if body: body = '<div class=padded_feed>{0}</div>'.format(body)
 
     feed = '''
-        <span class="{0}">{1}</span> <span class=dull>#</span> <span style="float:right"
+        <span class="{0}">{1}</span> <dull>#</dull> <span style="float:right"
         onclick="this.parentNode.parentNode.removeChild(this.parentNode); editor.focus()">
         <span style="padding-right: 4px" class="dull kill_button hint--left hint--bounce"
         data-hint="Delete This Feed">x</span></span>{2}{3}
@@ -383,9 +351,7 @@ def init():
 
     issue_pin = superpin
 
-    # attach the finder's statics method to server at /static
     finder = Finder()
-    server.static = finder.static
 
     # attach the domains manager to the server at /nush
     domains = DomainsManager()

@@ -398,6 +398,10 @@ cherrypy.quickstart(server, '/', {
         'tools.websocket.on': True,
         'tools.websocket.handler_cls': Socket
         },
+    '/static': {
+        'tools.staticdir.on': True,
+        'tools.staticdir.dir': ROOTDIR + '/static'
+        },
     '/': {
         'tools.staticdir.on': True,
         'tools.staticdir.dir': '/'

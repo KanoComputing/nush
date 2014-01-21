@@ -153,7 +153,12 @@ function output(string) {
 
     if (stdout === null) {
         
-        var stdout_feed = '<good>nush</good> <lite>#</lite> interpreter';
+        var stdout_feed = ''
+            + '<good>nush</good> <dull>#</dull> <span style="float:right"'
+            + 'onclick="this.parentNode.parentNode.removeChild(this.parentNode); stdout=null; editor.focus()">'
+            + '<span style="padding-right: 4px" class="dull kill_button hint--left hint--bounce"'
+            + 'data-hint="Delete This Feed">x</span></span>interpreter'
+        
         create_feed(stdout_feed, 'stdout');
         stdout = document.getElementById('stdout');
         }
@@ -240,7 +245,6 @@ window.onbeforeunload = function() { clear_stdins() };
 
 function toast_extension(extension) { toastr.success('NAMESPACE EXTENDED: ' + extension) }
 function license() { enter('shell.license()', false) }
-// TODO MAYBE // .print <img src=http://imgs.xkcd.com/comics/python.png style=padding:12px>
 
 
 // -------- SLATE KEYBINDINGS ----------------
