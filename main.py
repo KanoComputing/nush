@@ -125,7 +125,10 @@ class Interpreter(InteractiveConsole):
 
         while extension != 'shell' and 'shell' not in self.extensions: pass
 
-        if extension in self.extensions and not redo: return
+        if extension in self.extensions and not redo:
+        
+            if extension == 'shell': send('connected(2)')
+            return
 
         if extension not in self.extensions: self.extensions.append(extension)
 
