@@ -3,6 +3,7 @@
 
 # standard library stuff
 import os
+import sys
 import cgi
 import json
 import shutil
@@ -291,7 +292,8 @@ def path_expand(path):
     if   starts('/'):   return path
     elif starts('./'):  return normalise(os.getcwd() + path[1:])
     elif starts('../'): return normalise(os.path.dirname(os.getcwd()) + path[2:])
-    elif starts('~/'):  return os.path.expanduser("~") + path[1:]
+    elif starts('~/'):  return os.path.expanduser('~') + path[1:]
+    elif starts('||'):  return ROOTDIR + '/' + path[2:]
     elif starts('|'):
 
         try:
@@ -376,17 +378,7 @@ HOME = os.path.expanduser("~")
 ROOTDIR = os.path.dirname(os.path.abspath(__file__))
 
 # load the bookmarks.json file into a dict
-BOOKMARKS = json.loads(open(ROOTDIR+'/static/apps/shell/bookmarks.json').read())
+BOOKMARKS = json.loads(open(ROOTDIR+'/bookmarks.json').read())
 
-# this code is executed inside the interpreter when it's created. it calls the init
-# method from this module, then imports a bunch of stuff from the module afterwards
-# while the code doesn't really /use/ the extensions system, it registers itself as
-# an extension, allowing dependent extensions to load safely
-namespace = '''
-import os
-nush.init()
-from nush import issue_pin
-from nush import superspace, finder
-from nush import handlers, domains, radio
-nush.interpreter.extensions.append('core')
-'''
+# this code is executed inside the interpreter when it's created
+core_extension = open(ROOTDIR+'/core.py').read()

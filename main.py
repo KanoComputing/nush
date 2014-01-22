@@ -54,7 +54,7 @@ class Interpreter(InteractiveConsole):
 
         InteractiveConsole.__init__(self, {'nush': nush})
 
-        self.runcode(nush.namespace)
+        self.runcode(nush.core_extension)
 
 
     def enter(self, string, seen=False):
@@ -67,11 +67,11 @@ class Interpreter(InteractiveConsole):
         echoed to the shell. It is possible [actually commonplace] for code
         to be executed silently, so it doesn't appear to be user input.'''
 
+        def opps(error, string): nush.pipe.standard_error(error, string, None)
+        
         string = string.strip()
 
-        # handle output...
-
-        if seen:
+        if seen: # handle output
 
             radio.send('pin0', json.dumps({
                 'jscript': 'output(pkg.string)',
@@ -84,11 +84,7 @@ class Interpreter(InteractiveConsole):
 
             self.line_history.append(string)
 
-        # handle commands...
-
-        def opps(error, string): nush.pipe.standard_error(error, string, None)
-
-        if string.startswith('.'):
+        if string.startswith('.'): # handle commands
 
             if '\n' in string:
 
@@ -106,10 +102,8 @@ class Interpreter(InteractiveConsole):
             except: pass
             return None
 
-        # handle expressions and blocks...
+        try: # handle expressions and blocks
 
-        try:
-            
             output = eval(string.strip(), interpreter.locals)
             if output is not None: nush.pipe.standard_out(output)
 
@@ -125,49 +119,32 @@ class Interpreter(InteractiveConsole):
 
         This method accepts an extension name, a list of paths to files and
         a redo bool. If redo is truthy, the extension will be loaded even
-        if it has been loaded already, otherwise not.
+        if it has been loaded already, otherwise not.'''
 
-        An extension typically consists of one file that actually extends
-        the namespace, and another, of the same name, but living in the
-        extensions directory, that the end user can hack on. Any file
-        that doesn't exist is simply ignored.
+        def send(jscript): radio.send('pin0', json.dumps({'jscript': jscript}))
 
-        No extension can load until the core extension is loaded, which is
-        done when nush.namespace is entered at the end of self.__init__ .
-
-        No other extension, apart from the core, can load until the shell's
-        extension has loaded, so further extensions can depend on the shell
-        existing and the namespace being ready to manage it.
-        '''
-
-        jscript = '' # shell output, if any is needed
-
-        # the shell waits for the core, everything else waits for the shell
-        while not 'core' in self.extensions: pass
         while extension != 'shell' and 'shell' not in self.extensions: pass
 
-        # if this extension has been done, and shouldn't be redone, the
-        # following block (which loads the extension) is skipped over
-        if not (extension in self.extensions and not redo):
+        if extension in self.extensions and not redo: return
 
-            # make sure the extension's in the list of done extensions
-            if extension not in self.extensions: self.extensions.append(extension)
+        if extension not in self.extensions: self.extensions.append(extension)
 
-            # turn the list of paths, for files that exist, into a string of exec calls
-            code = '\n'.join(
-                'exec(compile(open("{0}").read(), "{0}", "exec"))'.format(ROOTDIR+path)
-                for path in paths if os.path.isfile(ROOTDIR+path)
-                )
+        template = 'exec(compile(open("{0}").read(), "{0}", "exec"))'
 
-            # enter the code and set up some jscript to toast the extension
-            self.enter(code, False)
-            jscript += 'toast_extension("{0}");'.format(extension)
+        self.enter('\n'.join(
+            template.format(nush.finder.resolve(path))
+            for path in paths if os.path.isfile(nush.finder.resolve(path))
+            ), False)
 
-        # if this is the shell extension (a special case) update the shell client
-        if extension == 'shell': jscript += 'connected(2)'
+        send('toast_extension("{0}")'.format(extension))
 
-        # finish by sending the jscript to the shell
-        radio.send('pin0', json.dumps({'jscript': jscript}))
+        if not extension == 'shell': return
+
+        send('connected(2)')
+
+        try: self.enter(open(nush.finder.resolve('||hacks/config.py')).read())
+        except: pass
+
 
 
 class Socket(WebSocket):

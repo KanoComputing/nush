@@ -65,7 +65,7 @@ editor.on('change', function () {
 
     var socket = radio_socket('pin0');
 
-    socket.onopen = function() { extend('shell', ['/extensions/builtin/shell.py', '/extensions/shell.py'], false) };
+    socket.onopen = function() { extend('shell', ['||shell.py'], false) };
     socket.onmessage = function(event) {
 
         pkg = JSON.parse(JSON.parse(event.data).message);

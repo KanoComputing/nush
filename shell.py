@@ -1,31 +1,28 @@
-
-        # NUSH: SHELL EXTENSION
-
 class Shell:
 
     '''This class implements a singleton, named shell, that wraps the shell clients for the
     user. They're expected to interact with the shell through the API created here.'''
 
     license_info = open(nush.ROOTDIR+'/static/apps/shell/license.html').read()
-    
+
     def send(self, data):
-        
+
         '''This method just sends a message to the shell. The shell expects packages, which
         are JSON dicts containing some JavaScript to be evaluated. There's also the option
         to pass other data in the dict, and reference it in the JavaScript as attributes
         of an object named pkg . See the user docs for more information.'''
-        
+
         radio.send('pin0', data)
 
 
     def evaluate(self, expression, extras=None):
-        
+
         '''This method accepts a JavaScript string, and optionally a dict of objects. It
         packages everything up and sends it to the shell, which evaluates the JavaScript
         and returns the value. This method blocks until that evaluation is complete.'''
 
         pin = issue_pin() # the pin used to identify the response from the client
-        
+
         # package everything and pass it to the supereval function in the shell
         jscript = 'supereval(pkg.pin, pkg.expression, pkg)'
         package = {'jscript': jscript, 'pin': pin, 'expression': expression}
@@ -37,16 +34,16 @@ class Shell:
         nush.stdin_lock.acquire()
 
         while True:
-        
+
             if pin in superspace: break
             nush.stdin_lock.wait()
-        
+
         nush.stdin_lock.release()
         return superspace.pop(pin)
 
 
     def execute(self, jscript, extras=None):
-        
+
         '''This method sends a package to the shell, then returns None. It is used to push
         arbitrary code to the shell. Is that dangerous? Who really gives a shit.'''
 
@@ -74,22 +71,22 @@ class Shell:
         self.create_feed(color, title, message, body.format(path, height))
 
 
-    def create_tab(self, url): 
-        
+    def create_tab(self, url):
+
         '''This method takes a URL and opens a new tab in the browser, via the shell's tab.'''
-        
+
         self.execute('window.open("{0}")'.format(url))
 
 
     def clear(self):
-        
+
         '''This method simply clears the output feeds from the shell.'''
-        
+
         self.execute('clear_feeds()')
 
 
     def license(self):
-        
+
         '''This method renders the licensing information in the shell. The actual HTML string
         is at the bottom of this file, but bound to the nush module. This is an extension, so
         it has to clean up its namespace when it loads.'''
@@ -103,7 +100,7 @@ def view(path=''):
     '''A command for viewing directories and files. It will do different things depending on
     the type of thing it is rendering. See the user docs for more information.'''
 
-    if not path: path = os.getcwd()
+    if not path: path = nush.os.getcwd()
     else: path = finder.resolve(path)
 
     # if it's just a web address, done
@@ -112,9 +109,9 @@ def view(path=''):
         )
 
     ## handle viewing a file...
-    
-    if os.path.isfile(path):
-        
+
+    if nush.os.path.isfile(path):
+
         ends = path.endswith
 
         if ends('.sh.py'): return None # TODO
@@ -122,7 +119,7 @@ def view(path=''):
         elif ends('.mp4') or ends('.ogg'):
 
             message = 'rendering the video at'
-            file_ext = os.path.splitext(path)[1][1:]
+            file_ext = nush.os.path.splitext(path)[1][1:]
             body = (
                 '<video height="200" controls autoplay><source src="{0}"></video>'
                 ).format(path, file_ext)
@@ -145,7 +142,7 @@ def view(path=''):
 
     ## handle viewing a directory...
 
-    elif os.path.isdir(path):
+    elif nush.os.path.isdir(path):
 
         message = 'rendering the directory at' if path else 'rendering the working directory, currently at'
         body = nush.dir2html(path)
@@ -182,28 +179,28 @@ def edit(path=''):
         path = finder.resolve(tokens[1])
 
         # throw one if the path points to an existing file
-        if os.path.isfile(path): return shell.create_feed(
+        if nush.os.path.isfile(path): return shell.create_feed(
                 'red', 'edit', 'there\'s already a file at <hi>{0}</hi>'.format(path)
                 )
 
         ## now try and write to the new file, if it can be done without
         ## creating directories...
-        
+
         try:
-            
+
             with open(path, 'w') as f: f.write('')
-            
+
         except IOError: return shell.create_feed(
             'red', 'edit', 'there\'s no path to <hi>{0}</hi>'.format(path)
             )
 
     ## the user wants to edit an existing file. first check that it actually
     ## does exist...
-    
+
     else:
 
         path = finder.resolve(path)
-        if not os.path.isfile(path): return shell.create_feed(
+        if not nush.os.path.isfile(path): return shell.create_feed(
                 'red', 'edit', 'there\'s no file at <hi>{0}</hi>'.format(path)
                 )
 
@@ -216,7 +213,7 @@ def mark(args=''):
     '''A Command for Managing Bookmarks.'''
 
     def update_bookmarks_file():
-        
+
         '''This function writes the bookmarks to disk, as a JSON file.'''
 
         with open(nush.ROOTDIR+'/static/apps/shell/bookmarks.json', 'w') as f: f.write(nush.json.dumps(nush.BOOKMARKS))
@@ -262,7 +259,7 @@ def mark(args=''):
 
     # else if the user wants to create a new bookmark...
 
-    if length == 1: name, path = tokens[0], os.getcwd()       # bookmark the current working directory
+    if length == 1: name, path = tokens[0], nush.os.getcwd()  # bookmark the current working directory
     else: name, path = tokens[1], finder.resolve(tokens[0])   # bookmark the given path
 
     nush.BOOKMARKS[name] = path
@@ -281,16 +278,16 @@ def goto(path=''):
 
     if not path:
 
-        os.chdir(nush.HOME)
+        nush.os.chdir(nush.HOME)
         message = 'the working directory is now <hi>{0}</hi>'.format(nush.HOME)
         return shell.create_feed('green', 'goto', message)
 
     path = finder.resolve(path)
-    
+
     # if it's just a web address, done
     if nush.urlparse(path).scheme: return shell.create_tab(path)
 
-    try: os.chdir(path)
+    try: nush.os.chdir(path)
     except OSError:
 
         message = 'there\'s no directory at <hi>{0}</hi>'.format(path)
@@ -305,37 +302,37 @@ def move(args=''):
 
     '''A command for moving files and directories from where they are to some other
     directory. It checks that no data is going to be overwritten in the process.'''
-    
+
     tokens = args.split()
-    
+
     # throw one if there's not enough args
     if len(tokens) != 2: return shell.create_feed(
         'red', 'move', 'you must provide two paths: <hi>.move /from /to</hi>'
         )
-        
+
     item, destination = finder.resolve(tokens[0]), finder.resolve(tokens[1])
-    
+
     # check if the item to be moved is a file or directory, throwing one if it's neither
-    if os.path.isdir(item): kind = 'directory'
-    elif os.path.isfile(item): kind = 'file'
+    if nush.os.path.isdir(item): kind = 'directory'
+    elif nush.os.path.isfile(item): kind = 'file'
     else: return shell.create_feed('red', 'move', 'there\'s nothing at <hi>{0}</hi>'.format(item))
-    
+
     # throw one if the destination is not an existing directory
-    if not os.path.isdir(destination): return shell.create_feed(
+    if not nush.os.path.isdir(destination): return shell.create_feed(
         'red', 'move', 'there\'s no directory at <hi>{0}</hi>'.format(destination)
         )
-    
+
     # find out where the item will end up
-    nupath = destination + '/' + os.path.basename(item)
-    
+    nupath = destination + '/' + nush.os.path.basename(item)
+
     # throw one if this move would overwrite something else
-    if os.path.exists(nupath):
-        
-        nukind = 'directory' if os.path.isdir(nupath) else 'file'
+    if nush.os.path.exists(nupath):
+
+        nukind = 'directory' if nush.os.path.isdir(nupath) else 'file'
         return shell.create_feed(
             'red', 'move', 'a {0} already lives at <hi>{1}</hi>'.format(nukind, nupath)
             )
-    
+
     # move the item and say so
     nush.shutil.move(item, destination)
     shell.create_feed(
@@ -356,9 +353,9 @@ def input(prompt='> '):
     It is used by the StdIn class below to hook stdin calls to the shell.'''
 
     ## render a new stdin prompt in the shell...
-    
+
     if prompt: prompt = '<good><xmp style=display:inline>{0}</xmp></good>'.format(prompt)
-    
+
     pin = issue_pin()
     nush.pipe.output += '''
     <form id=%s onsubmit="return false" style=display:inline>%s<input class=stdin_prompt
@@ -367,16 +364,16 @@ def input(prompt='> '):
     ''' % (pin, prompt)
 
     ## wait for the response, then return it...
-    
+
     nush.stdin_lock.acquire()
-            
+
     while True:
-    
+
         if pin in superspace: break
         nush.stdin_lock.wait()
-    
+
     nush.stdin_lock.release()
-    
+
     return superspace.pop(pin)
 
 
@@ -386,22 +383,20 @@ class StdIn:
 
     '''This class just wraps Python's stdin, hooking it to the shell, via the custom input
     function above.'''
-    
+
     def isatty(self): return False
     def readline(self): return input()
 
 
 ## tweak the namespace and set up the pipework...
 
-import sys
-
 shell = Shell()
 nush.shell = shell
 nush.pipe = nush.pipes.Pipes(nush.radio)
 put = nush.pipe.standard_put
 esc = nush.pipe.render
-sys.stdin = StdIn()
-sys.excepthook = nush.pipe.standard_error
+nush.sys.stdin = StdIn()
+nush.sys.excepthook = nush.pipe.standard_error
 
 del Shell, StdIn
 
