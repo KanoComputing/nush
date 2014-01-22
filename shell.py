@@ -216,7 +216,7 @@ def mark(args=''):
 
         '''This function writes the bookmarks to disk, as a JSON file.'''
 
-        with open(nush.ROOTDIR+'/static/apps/shell/bookmarks.json', 'w') as f: f.write(nush.json.dumps(nush.BOOKMARKS))
+        with open(nush.ROOTDIR+'/bookmarks.json', 'w') as f: f.write(nush.json.dumps(nush.BOOKMARKS))
 
     tokens = args.split()
     length = len(tokens)
