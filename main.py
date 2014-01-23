@@ -68,7 +68,7 @@ class Interpreter(InteractiveConsole):
         to be executed silently, so it doesn't appear to be user input.'''
 
         def opps(error, string): nush.pipe.standard_error(error, string, None)
-        
+
         string = string.strip()
 
         if seen: # handle output
@@ -126,7 +126,7 @@ class Interpreter(InteractiveConsole):
         while extension != 'shell' and 'shell' not in self.extensions: pass
 
         if extension in self.extensions and not redo:
-        
+
             if extension == 'shell': send('connected(2)')
             return
 

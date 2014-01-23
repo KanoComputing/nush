@@ -7,6 +7,10 @@ body {
     background-image: url('/static/bg.png');
     }
 
+::selection { background: rgba(255, 201, 119, 0.24) }
+
+* { font-family: Droid Mono }
+
 a { color: #0F0 }
 
 a:active, banner_button { color: #555 }
@@ -18,7 +22,6 @@ a:hover, banner_button {
 
 input {
     color: white;
-    font-family: monospace;
     border: none;
     background: transparent;
     margin: 0;
@@ -48,7 +51,6 @@ iframe {
 .stdout xmp { padding-top: 4px }
 
 .feed {
-    font-family: monospace;
     border-top: 1px solid #292929;
     border-bottom: 1px solid black;
     word-wrap: break-word;
@@ -83,17 +85,10 @@ iframe {
 
 #editor { background: transparent }
 
-#feeds {
-    color: #EFE;
-    font-size: 12px;
-    line-height: 16px;
-    font-family: monospace;
-    width: 100%;
-    }
+#feeds { color: #EFE; line-height: 16px; width: 100%; }
 
 #footer {
     color: #555;
-    font-family: monospace;
     padding: 16px 4px 0 4px;
     }
 
