@@ -127,12 +127,13 @@ def view(path=''):
         elif ends('.mp3'):
 
             message = 'rendering the audio at'
-            body = '<audio controls autoplay><source src="{0}" type="audio/mpeg"></audio>'.format(path)
+            body =  '<div class=popout><audio controls autoplay>'
+            body += '<source src="{0}" type="audio/mpeg"></audio></div>'.format(path)
 
         elif ends('.png') or ends('.jpg') or ends('.jpeg'):
 
             message = 'rendering the image at'
-            body = '<img height="200" src="{0}">'.format(path)
+            body = '<div class=popout><img height="200" src="{0}"></div>'.format(path)
 
         else: return shell.create_frame(
                 'green', 'view', 'rendering the text file at <hi>{0}</hi>'.format(path),
