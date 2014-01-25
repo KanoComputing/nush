@@ -12,4 +12,4 @@ nush is currently unpackaged, but bundles everything it needs. You just need to 
 
     python3 nush/main.py
 
-nush is GPLv3 licensed. It may switch to the MIT license in future, but will always be totally open source.
+*This software is licensed under the terms of the GPL, version 3.*

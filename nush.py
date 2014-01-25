@@ -349,11 +349,10 @@ def init():
     itself to this module. Once that's done, this module can safely reference them. The job
     of this function is to tweak things once the objects are available.'''
 
-    global issue_pin, domains, handlers, builtin_handlers, finder
-
-    issue_pin = superpin
+    global finder, issue_pin, domains, handlers, builtin_handlers
 
     finder = Finder()
+    issue_pin = superpin
 
     # attach the domains manager to the server at /nush
     domains = DomainsManager()
