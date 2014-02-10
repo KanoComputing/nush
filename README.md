@@ -10,6 +10,6 @@ how to use the software.
 
 nush is currently unpackaged, but bundles everything it needs. You just need to clone the repo and run it:
 
-    python3 nush/main.py
+    python3 nush
 
 *This software is licensed under the terms of the GPL, version 3.*
