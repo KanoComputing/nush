@@ -20,6 +20,9 @@ from nush import ROOTDIR, escape_html, path_resolve, feed, superpin
 sys.path.append(ROOTDIR+'/extensions')
 sys.path.append(".")
 
+# Define server port from environment or use default port
+server_port = os.environ.get('PORT', 10002)
+
 
 class Interpreter(InteractiveConsole):
 
@@ -364,13 +367,15 @@ interpreter = Interpreter()
 # set the host and port number
 cherrypy.config.update({
     'server.socket_host': '127.0.0.1',
-    'server.socket_port': 10002,
+    'server.socket_port': server_port,
     'environment': 'production'
     })
 
 # plumb in ws4py's cherrypy websocket plugin
 WebSocketPlugin(cherrypy.engine).subscribe()
 cherrypy.tools.websocket = WebSocketTool()
+
+print('Listening on localhost:{port}...'.format(port=server_port))
 
 # start serving everything
 cherrypy.quickstart(server, '/', {
